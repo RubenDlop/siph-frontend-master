@@ -22,7 +22,7 @@ export class AuthInterceptor implements HttpInterceptor {
 
     return next.handle(
       req.clone({
-        setHeaders: { Authorization: `Bearer ${token}` }, // ✅ espacio correcto
+        setHeaders: { Authorization: `Bearer ${token}` },
       })
     );
   }

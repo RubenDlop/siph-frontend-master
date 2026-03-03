@@ -1,0 +1,33 @@
+:host {
+  display: block;
+}
+
+/* Blindaje: si tienes CSS global agresivo con !important */
+.mr-page {
+  color: #0f172a !important;
+}
+
+/* No destruye text-white */
+.mr-page :where(*):not(.text-white):not(.text-white *) {
+  color: #0f172a !important;
+}
+
+/* Tonos usados */
+.mr-page .text-slate-900 { color: #0f172a !important; }
+.mr-page .text-slate-800 { color: #1f2937 !important; }
+.mr-page .text-slate-700 { color: #334155 !important; }
+.mr-page .text-slate-600 { color: #475569 !important; }
+.mr-page .text-slate-500 { color: #64748b !important; }
+
+.mr-page .text-indigo-900 { color: #312e81 !important; }
+.mr-page .text-indigo-800 { color: #3730a3 !important; }
+.mr-page .text-indigo-700 { color: #4338ca !important; }
+
+.mr-page .text-emerald-900 { color: #064e3b !important; }
+.mr-page .text-emerald-800 { color: #065f46 !important; }
+
+.mr-page .text-rose-900 { color: #881337 !important; }
+.mr-page .text-rose-800 { color: #9f1239 !important; }
+
+/* Respeta blancos */
+.mr-page .text-white { color: #ffffff !important; }

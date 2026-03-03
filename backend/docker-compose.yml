@@ -19,7 +19,6 @@ services:
     container_name: siph_api
     restart: always
 
-    # ✅ CARGA variables del archivo backend/.env dentro del contenedor
     env_file:
       - .env
 
@@ -30,16 +29,26 @@ services:
       JWT_EXPIRATION_MINUTES: 60
       GOOGLE_CLIENT_ID: 1026227617402-hts4hu699cuo0gmh5fg8sh8ncjfdvo76.apps.googleusercontent.com
 
+      # ✅ CORS
+      CORS_ORIGINS: http://localhost:4200,http://127.0.0.1:4200
+
     ports:
       - "8000:8000"
 
     depends_on:
       - db
 
-    # ✅ Mantengo tu bind mount para desarrollo
     volumes:
       - .:/app
+      - ./uploads:/app/uploads
+
     working_dir: /app
+
+    command: >
+      uvicorn app.main:app
+      --host 0.0.0.0
+      --port 8000
+      --reload
 
 volumes:
   pgdata:

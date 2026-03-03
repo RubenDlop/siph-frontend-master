@@ -1,11 +1,11 @@
 # backend/app/main.py
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .core.database import Base, engine
 
-# ✅ Importar modelos para que SQLAlchemy registre las tablas (side effects)
-# (con que se importen 1 vez es suficiente)
+# ✅ Importar modelos (side effects: registrar tablas)
 from .models.user import User  # noqa: F401
 from .models.service_request import ServiceRequest  # noqa: F401
 from .models.worker_application import WorkerApplication  # noqa: F401
@@ -20,7 +20,7 @@ from .routers import (
     auth,
     requests,
     worker_applications,
-    technician_verification as tech_ver_router,
+    technician_verification,
     admin_technician_verification,
     admin_worker_applications,
 )
@@ -28,20 +28,30 @@ from .routers import (
 app = FastAPI(title="SIPH API")
 
 # =========================
-# CORS (Angular)
+# ✅ CORS (DEV / Angular)
 # =========================
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
+# Puedes definir CORS_ORIGINS en backend/.env (separadas por coma)
+# Ej: CORS_ORIGINS=http://localhost:4200,http://127.0.0.1:4200
+raw = os.getenv("CORS_ORIGINS", "").strip()
+allow_origins = [o.strip() for o in raw.split(",") if o.strip()]
+
+# fallback robusto (por si no está CORS_ORIGINS)
+if not allow_origins:
+    allow_origins = [
         "http://localhost:4200",
         "http://127.0.0.1:4200",
-        # ✅ Si accedes desde otra PC/móvil con IP, agrega aquí:
-        # "http://192.168.1.100:4200",
-    ],
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allow_origins,
+    # extra robusto: permite localhost/127.0.0.1 con cualquier puerto en DEV
+    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    # ✅ Recomendado si descargas archivos y quieres leer el filename en frontend
     expose_headers=["Content-Disposition"],
 )
 
@@ -54,14 +64,13 @@ Base.metadata.create_all(bind=engine)
 app.include_router(auth.router)
 app.include_router(requests.router)
 
-# worker applications: user + admin
-app.include_router(worker_applications.router)
-app.include_router(worker_applications.admin_router)
-app.include_router(admin_worker_applications.router)
+# USER routes
+app.include_router(worker_applications.router)         # /worker-applications/me
+app.include_router(technician_verification.router)     # /tech/verification/me
 
-# technician verification: user + admin
-app.include_router(tech_ver_router.router)
-app.include_router(admin_technician_verification.router)
+# ADMIN routes
+app.include_router(admin_worker_applications.router)        # /admin/worker-applications
+app.include_router(admin_technician_verification.router)    # /admin/tech/verification
 
 # =========================
 # Healthcheck

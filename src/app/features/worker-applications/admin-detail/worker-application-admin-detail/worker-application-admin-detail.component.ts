@@ -24,28 +24,23 @@ type DecisionStatus = 'APPROVED' | 'REJECTED';
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './worker-application-admin-detail.component.html',
-  styleUrl: './worker-application-admin-detail.component.scss',
+  styleUrls: ['./worker-application-admin-detail.component.scss'], // ✅ más compatible
 })
 export class WorkerApplicationAdminDetailComponent implements OnInit {
-  // UI
   loading = false;
   busy = false;
   errorMsg = '';
   toastMsg = '';
 
-  // Data
   id = 0;
   app: AdminWorkerApplication | null = null;
 
-  // notes textarea
   notes = '';
 
-  // Verification docs
   verifLoading = false;
   verifError = '';
   verifCase: AdminCaseDetail | null = null;
 
-  // ✅ para el footer (NO usar new Date() en HTML)
   currentYear = new Date().getFullYear();
 
   constructor(
@@ -76,12 +71,10 @@ export class WorkerApplicationAdminDetailComponent implements OnInit {
     this.errorMsg = '';
     this.toastMsg = '';
 
-    // ✅ Si no tienes endpoint GET /admin/worker-applications/{id},
-    // usamos adminList() y buscamos el ID (funciona y compila).
-    this.api.adminList(undefined).subscribe({
+    this.api.adminList().subscribe({
       next: (data) => {
         const list = data ?? [];
-        const found = list.find((x) => x.id === this.id) ?? null;
+        const found = list.find((x: any) => Number(x?.id) === this.id) ?? null;
 
         if (!found) {
           this.app = null;
@@ -91,12 +84,24 @@ export class WorkerApplicationAdminDetailComponent implements OnInit {
         }
 
         this.app = found;
-        this.notes = found.admin_notes ?? '';
+        this.notes = (found as any).admin_notes ?? '';
 
         this.loading = false;
 
-        // cargar verificación
-        this.loadVerification(found.user_id);
+        // ✅ tolerante: user_id / userId / user.id
+        const userId =
+          (found as any).user_id ??
+          (found as any).userId ??
+          (found as any).user?.id ??
+          0;
+
+        if (!userId) {
+          this.verifCase = null;
+          this.verifError = 'No se pudo determinar el userId del solicitante.';
+          return;
+        }
+
+        this.loadVerification(Number(userId));
       },
       error: (err) => {
         this.loading = false;
@@ -131,9 +136,6 @@ export class WorkerApplicationAdminDetailComponent implements OnInit {
     });
   }
 
-  // =========================
-  // ✅ Decide (APPROVE / REJECT)
-  // =========================
   private decisionToStatus(decision: Decision): DecisionStatus {
     return decision === 'APPROVE' ? 'APPROVED' : 'REJECTED';
   }
@@ -148,17 +150,14 @@ export class WorkerApplicationAdminDetailComponent implements OnInit {
     const status = this.decisionToStatus(decision);
     const notes = (this.notes || '').trim();
 
-    // ✅ Para cubrir ambos backends:
-    // - si backend espera { decision }
-    // - o si espera { status }
     const payload: any = {
-      status, // tu frontend actual
-      decision, // backend anterior (si existiera)
+      status,
+      decision,
       admin_notes: notes || undefined,
     };
 
     this.api.adminDecide(this.app.id, payload).subscribe({
-      next: (updated) => {
+      next: (updated: any) => {
         this.app = updated;
         this.notes = updated?.admin_notes ?? this.notes ?? '';
         this.busy = false;
@@ -177,18 +176,14 @@ export class WorkerApplicationAdminDetailComponent implements OnInit {
     });
   }
 
-  // =========================
-  // ✅ Docs
-  // =========================
   openDoc(doc: AdminCaseDoc): void {
     if (!this.verifCase) return;
     if (!doc?.id) return;
-    if (doc.hasFile === false) return;
 
     this.verifError = '';
 
     this.techAdmin.downloadDoc(this.verifCase.caseId, doc.id).subscribe({
-      next: (blob) => {
+      next: (blob: Blob) => {
         const url = URL.createObjectURL(blob);
         window.open(url, '_blank');
         setTimeout(() => URL.revokeObjectURL(url), 60_000);
@@ -201,9 +196,6 @@ export class WorkerApplicationAdminDetailComponent implements OnInit {
     });
   }
 
-  // =========================
-  // ✅ UI helpers
-  // =========================
   badgeClass(status: WorkerAppStatus): string {
     const base =
       'inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-extrabold';
@@ -230,7 +222,7 @@ export class WorkerApplicationAdminDetailComponent implements OnInit {
   }
 
   userName(app: AdminWorkerApplication): string {
-    const u: any = app?.user ?? {};
+    const u: any = (app as any)?.user ?? {};
     const fn = (u.first_name ?? u.firstName ?? '').toString().trim();
     const ln = (u.last_name ?? u.lastName ?? '').toString().trim();
     const full = `${fn} ${ln}`.trim();

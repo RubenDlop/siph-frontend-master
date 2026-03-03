@@ -1,0 +1,17 @@
+/* src/app/features/requests/request-create/request-create.component.scss */
+:host {
+  display: block;
+}
+
+/* Leaflet: respeta el borde redondeado y tipografía */
+:host ::ng-deep #reqMap.leaflet-container {
+  font-family: inherit;
+}
+
+/* Opcional: que el tooltip/popups se vean más finos */
+:host ::ng-deep .leaflet-popup-content-wrapper {
+  border-radius: 16px;
+}
+:host ::ng-deep .leaflet-popup-tip {
+  box-shadow: none;
+}

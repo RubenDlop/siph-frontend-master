@@ -37,14 +37,14 @@ export class AdminTechVerificationService {
   private http = inject(HttpClient);
   private base = environment.apiUrl || 'http://localhost:8000';
 
-  // ✅ para usar desde el modal de worker-applications (con user_id)
+
   latestCaseByUser(userId: number) {
     return this.http.get<AdminCaseDetail | { hasCase: false }>(
       `${this.base}/admin/tech/verification/cases/by-user/${userId}`
-    );
+      );
   }
 
-  // ✅ descarga del archivo (AuthInterceptor añade Bearer)
+
   downloadDoc(caseId: number, docId: number) {
     return this.http.get(`${this.base}/admin/tech/verification/cases/${caseId}/documents/${docId}/file`, {
       responseType: 'blob',

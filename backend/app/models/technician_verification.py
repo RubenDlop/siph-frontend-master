@@ -118,8 +118,12 @@ class VerificationCase(Base):
 
     id = Column(Integer, primary_key=True, index=True)
 
-    tech_id = Column(Integer, ForeignKey("technician_profiles.id"), nullable=False, index=True)
-    tech = relationship("TechnicianProfile", back_populates="cases", foreign_keys=[tech_id])
+    tech_id = Column(
+        Integer, ForeignKey("technician_profiles.id"), nullable=False, index=True
+    )
+    tech = relationship(
+        "TechnicianProfile", back_populates="cases", foreign_keys=[tech_id]
+    )
 
     target_level = Column(Enum(TechLevel), default=TechLevel.BASIC, nullable=False)
     status = Column(Enum(TechStatus), default=TechStatus.PENDING, nullable=False, index=True)
@@ -174,7 +178,11 @@ class VerificationDocument(Base):
     received_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     # Minimización / Retención
-    storage_ref = Column(String(500), nullable=True)  # solo ID_PHOTO (placeholder)
+    storage_ref = Column(String(500), nullable=True)  # antes: placeholder/encrypted://...
+    # ✅ NUEVO: ruta RELATIVA dentro de uploads/tech_verification
+    # Ej: "case-1/police_cert-<sha>.png"
+    file_path = Column(String(500), nullable=True)
+
     retained_until = Column(DateTime, nullable=True)  # solo ID_PHOTO (<=30d)
     deleted_at = Column(DateTime, nullable=True)
 

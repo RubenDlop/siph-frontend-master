@@ -2,6 +2,7 @@
 import json
 import hashlib
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Optional, Dict, Any
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
@@ -9,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from ..core.database import get_db
 from ..core.deps import get_current_user
+from ..core.storage_paths import tech_verification_root  # ✅ NUEVO (ruta uploads)
 from ..models.user import User
 from ..models.technician_verification import (
     TechnicianProfile,
@@ -30,7 +32,15 @@ from ..schemas.technician_verification import (
 router = APIRouter(prefix="/tech/verification", tags=["Tech Verification"])
 
 MAX_MB = 5
-ALLOWED_CT = {"application/pdf", "image/png", "image/jpeg"}
+ALLOWED_CT = {"application/pdf", "image/png", "image/jpeg", "image/jpg", "image/webp"}
+
+EXT_BY_CT = {
+    "application/pdf": ".pdf",
+    "image/png": ".png",
+    "image/jpeg": ".jpg",
+    "image/jpg": ".jpg",
+    "image/webp": ".webp",
+}
 
 
 def _now():
@@ -39,6 +49,15 @@ def _now():
 
 def _sha256_bytes(b: bytes) -> str:
     return hashlib.sha256(b).hexdigest()
+
+
+def _safe_ext(file: UploadFile) -> str:
+    ct = (file.content_type or "").lower().strip()
+    if ct in EXT_BY_CT:
+        return EXT_BY_CT[ct]
+    if file.filename:
+        return Path(file.filename).suffix.lower()[:10]
+    return ""
 
 
 def _log(db: Session, case_id: int, actor_id: Optional[int], action: str, detail: Dict[str, Any]):
@@ -181,13 +200,19 @@ def upload_document(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
+    # ✅ consentimiento
     if str(consent).lower() != "true":
         raise HTTPException(status_code=400, detail="Debes autorizar el uso del documento solo para verificación.")
 
-    if file.content_type not in ALLOWED_CT:
-        raise HTTPException(status_code=400, detail="Formato no válido (solo PDF/PNG/JPG).")
+    # ✅ valida content-type
+    ct = (file.content_type or "").lower().strip()
+    if ct not in ALLOWED_CT:
+        raise HTTPException(status_code=400, detail="Formato no válido (solo PDF/PNG/JPG/WEBP).")
 
+    # ✅ lee bytes + valida tamaño
     data = file.file.read()
+    if not data:
+        raise HTTPException(status_code=400, detail="Archivo vacío.")
     if len(data) > MAX_MB * 1024 * 1024:
         raise HTTPException(status_code=400, detail="Archivo >5 MB")
 
@@ -209,35 +234,58 @@ def upload_document(
         db.commit()
         db.refresh(case)
 
-    extra_obj = {}
+    # ✅ extra JSON
+    extra_obj: Dict[str, Any] = {}
     if extra:
         try:
             extra_obj = json.loads(extra)
         except Exception:
             raise HTTPException(status_code=400, detail="Extra inválido (JSON).")
 
+    # ✅ docType enum
     try:
         dt = DocType(docType)
     except Exception:
         raise HTTPException(status_code=400, detail="docType no válido")
 
+    sha = _sha256_bytes(data)
+    ext = _safe_ext(file)
+
+    # ✅ GUARDA ARCHIVO FÍSICO (esto es lo que faltaba)
+    root = tech_verification_root().resolve()  # /app/uploads/tech_verification (según tu core/storage_paths.py)
+    case_dir = (root / f"case-{case.id}").resolve()
+    case_dir.mkdir(parents=True, exist_ok=True)
+
+    safe_name = dt.value.lower()
+    filename = f"{safe_name}-{sha}{ext}"
+    abs_path = (case_dir / filename).resolve()
+
+    # seguridad: evita path traversal
+    if root not in abs_path.parents:
+        raise HTTPException(status_code=400, detail="Ruta inválida.")
+
+    abs_path.write_bytes(data)
+
+    # ruta relativa para guardar en DB (portable)
+    rel_path = str(abs_path.relative_to(root))  # ej: "case-1/id_photo-<sha>.jpg"
+
     doc = VerificationDocument(
         case_id=case.id,
         doc_type=dt,
-        content_type=file.content_type,
+        content_type=ct,
         original_filename=file.filename,
         size_bytes=len(data),
-        sha256=_sha256_bytes(data),
+        sha256=sha,
         meta=extra_obj or {},
         received_at=_now(),
+        file_path=rel_path,   # ✅ CLAVE: Admin podrá abrirlo
+        storage_ref=rel_path, # ✅ compatibilidad con resolvers existentes
     )
 
-    # Minimización
+    # Retención (si quieres mantener tu regla)
     if dt == DocType.ID_PHOTO:
-        doc.storage_ref = f"encrypted://private/case-{case.id}/id-photo-{doc.sha256}.bin"
         doc.retained_until = _now() + timedelta(days=30)
     else:
-        doc.storage_ref = None
         doc.retained_until = None
 
     db.add(doc)
@@ -246,7 +294,7 @@ def upload_document(
         case.id,
         user.id,
         "UPLOAD_DOC",
-        {"docType": dt.value, "size": len(data), "minimized": dt != DocType.ID_PHOTO},
+        {"docType": dt.value, "size": len(data), "stored": True, "path": rel_path},
     )
     db.commit()
     db.refresh(doc)

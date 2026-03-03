@@ -137,8 +137,8 @@ export class WorkerApplicationsAdminComponent implements OnInit {
           return ((a.years_experience ?? 0) - (b.years_experience ?? 0)) * dir;
 
         default: {
-          const da = new Date((a as any).updated_at).getTime() || 0;
-          const db = new Date((b as any).updated_at).getTime() || 0;
+          const da = new Date(a.updated_at).getTime() || 0;
+          const db = new Date(b.updated_at).getTime() || 0;
           return (da - db) * dir;
         }
       }
@@ -264,22 +264,10 @@ export class WorkerApplicationsAdminComponent implements OnInit {
     });
   }
 
+  // ✅ FIX RUTA: según app.routes.ts -> /admin/worker-applications/:id
   goDetail(app: AdminWorkerApplication): void {
-    this.router.navigate(['/worker-applications/admin-detail', app.id]);
-  }
-
-  // eventos toolbar
-  onFilterChange(status: FilterStatus) {
-    this.statusFilter = status;
-    this.load();
-  }
-
-  onSearchChange(term: string) {
-    this.searchTerm = term;
-  }
-
-  onSortChange(key: 'updated_at' | 'name' | 'status' | 'years_experience') {
-    this.sortKey = key;
+    if (!app?.id) return;
+    this.router.navigate(['/admin/worker-applications', app.id]);
   }
 
   // util

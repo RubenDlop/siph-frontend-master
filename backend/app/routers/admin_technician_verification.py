@@ -1,13 +1,13 @@
 # backend/app/routers/admin_technician_verification.py
 
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, List
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from pathlib import Path
 
 from ..core.database import get_db
 from ..core.deps import get_current_user, require_roles
@@ -45,6 +45,92 @@ class ReviewDocPayload(BaseModel):
     notes: Optional[str] = None
 
 
+# =========================
+# ✅ helpers para ubicar archivos
+# =========================
+def _base_dir() -> Path:
+    # backend/app/routers/... -> backend/
+    return Path(__file__).resolve().parents[2]
+
+
+def _uploads_roots() -> List[Path]:
+    base = _base_dir()
+    return [
+        base / "uploads" / "tech_verification",
+        base / "uploads",
+        base,
+    ]
+
+
+def _normalize_storage_ref(sr: str) -> str:
+    sr = (sr or "").strip()
+    if not sr:
+        return ""
+
+    # encrypted://private/case-1/xxx.png  -> private/case-1/xxx.png
+    if sr.startswith("encrypted://"):
+        return sr.replace("encrypted://", "", 1).lstrip("/")
+
+    # file://abs/path -> mantenemos indicador de abs
+    if sr.startswith("file://"):
+        return sr
+
+    return sr.lstrip("/")
+
+
+def _resolve_doc_path(d: VerificationDocument) -> Optional[Path]:
+    """
+    Devuelve el primer Path existente en disco, o None.
+    Soporta:
+    - d.file_path
+    - d.storage_ref:
+        - file://ABS_PATH
+        - encrypted://private/...
+        - rutas relativas tipo private/case-1/...
+        - uploads/...
+    """
+    # 0) file_path
+    fp = getattr(d, "file_path", None)
+    if isinstance(fp, str) and fp.strip():
+        rel = fp.strip().lstrip("/")
+        for root in _uploads_roots():
+            cand = (root / rel).resolve()
+            if cand.exists():
+                return cand
+
+    # 1) storage_ref
+    sr0 = getattr(d, "storage_ref", None)
+    if isinstance(sr0, str) and sr0.strip():
+        # URLs públicas: no es archivo local
+        if sr0.startswith("http://") or sr0.startswith("https://"):
+            return None
+
+        if sr0.startswith("file://"):
+            abs_p = Path(sr0.replace("file://", "", 1))
+            if abs_p.exists():
+                return abs_p.resolve()
+            return None
+
+        rel = _normalize_storage_ref(sr0)
+        if rel:
+            for root in _uploads_roots():
+                cand = (root / rel).resolve()
+                if cand.exists():
+                    return cand
+
+    return None
+
+
+def _doc_has_file(d: VerificationDocument) -> bool:
+    sr = getattr(d, "storage_ref", None)
+    if isinstance(sr, str) and (sr.startswith("http://") or sr.startswith("https://")):
+        return True
+    return _resolve_doc_path(d) is not None
+
+
+# =========================
+# Endpoints
+# =========================
 @router.get("/cases")
 def list_cases(
     status: str = "IN_REVIEW",
@@ -86,7 +172,6 @@ def list_cases(
     return out
 
 
-# ✅ buscar el último caso por user_id (para integrarlo en modal de WorkerApplications)
 @router.get("/cases/by-user/{user_id}")
 def latest_case_by_user(
     user_id: int,
@@ -112,7 +197,6 @@ def latest_case_by_user(
     if not c:
         return {"hasCase": False}
 
-    # Reusar detalle
     return case_detail(c.id, db, user)
 
 
@@ -141,27 +225,8 @@ def case_detail(
         .all()
     )
 
-    # ✅ helper: detectar ruta real del archivo (si tu modelo usa file_path o storage_ref)
-    def _file_rel_path(d: VerificationDocument) -> Optional[str]:
-        # 1) Si tu modelo tiene file_path
-        fp = getattr(d, "file_path", None)
-        if fp:
-            return fp
-
-        # 2) Si tu modelo guarda storage_ref tipo "file:///app/uploads/..."
-        sr = getattr(d, "storage_ref", None)
-        if isinstance(sr, str) and sr.startswith("file://"):
-            # lo convertimos a un path absoluto; luego lo volvemos relativo a uploads_root si aplica
-            abs_p = Path(sr.replace("file://", "", 1))
-            return str(abs_p)  # lo tratamos como "abs" más abajo
-
-        return None
-
-    def _bool_has_file(d: VerificationDocument) -> bool:
-        return bool(_file_rel_path(d))
-
     return {
-        "hasCase": True,  # útil para tu frontend
+        "hasCase": True,
         "caseId": c.id,
         "techId": c.tech_id,
         "status": c.status.value,
@@ -187,20 +252,18 @@ def case_detail(
                 "verifiedResult": d.verified_result,
                 "verifiedAt": d.verified_at.isoformat() if d.verified_at else None,
                 "meta": d.meta or {},
-                # ✅ FIX: tu modelo es original_filename (no original_name)
                 "originalName": getattr(d, "original_filename", None),
                 "contentType": d.content_type,
-                "hasFile": _bool_has_file(d),
-                # opcional útil en UI
+                "hasFile": _doc_has_file(d),
                 "sizeBytes": getattr(d, "size_bytes", None),
                 "sha256": getattr(d, "sha256", None),
+                "storageRef": getattr(d, "storage_ref", None),
             }
             for d in docs
         ],
     }
 
 
-# ✅ descargar/ver archivo (para frontend con HttpClient responseType:'blob')
 @router.get("/cases/{case_id}/documents/{doc_id}/file")
 def download_document_file(
     case_id: int,
@@ -219,47 +282,24 @@ def download_document_file(
         .first()
     )
     if not d:
-        raise HTTPException(
-            status_code=404,
-            detail="Documento no encontrado para ese caso.",
-        )
+        raise HTTPException(status_code=404, detail="Documento no encontrado para ese caso.")
 
-    # 1) file_path (relativo dentro de uploads_root)
-    file_path = getattr(d, "file_path", None)
+    # ✅ Si storage_ref es URL, redirigimos
+    sr = getattr(d, "storage_ref", None)
+    if isinstance(sr, str) and (sr.startswith("http://") or sr.startswith("https://")):
+        return RedirectResponse(url=sr)
 
-    # 2) storage_ref tipo file://ABS_PATH
-    storage_ref = getattr(d, "storage_ref", None)
-    abs_from_storage: Optional[Path] = None
-    if not file_path and isinstance(storage_ref, str) and storage_ref.startswith("file://"):
-        abs_from_storage = Path(storage_ref.replace("file://", "", 1))
+    abs_path = _resolve_doc_path(d)
+    if not abs_path:
+        raise HTTPException(status_code=404, detail="Archivo no encontrado en disco (storage_ref no resolvió).")
 
-    if not file_path and not abs_from_storage:
-        raise HTTPException(
-            status_code=404,
-            detail="Este documento no tiene archivo asociado.",
-        )
-
-    # uploads vive en backend/uploads/tech_verification/...
-    base_dir = Path(__file__).resolve().parents[2]  # backend/
-    uploads_root = base_dir / "uploads" / "tech_verification"
-    uploads_root.mkdir(parents=True, exist_ok=True)
-
-    # Resolver path real
-    if abs_from_storage:
-        abs_path = abs_from_storage
-    else:
-        abs_path = uploads_root / str(file_path)
-
-    # ✅ seguridad: path debe quedar dentro de uploads_root (si es relativo)
-    # si es absoluto por storage_ref, intentamos validarlo también:
+    # ✅ seguridad: restringe a backend/uploads
+    base = _base_dir().resolve()
+    uploads = (base / "uploads").resolve()
     try:
-        abs_path.resolve().relative_to(uploads_root.resolve())
+        abs_path.resolve().relative_to(uploads)
     except Exception:
-        # si el storage_ref apunta a otro lugar, lo bloqueamos para evitar LFI
-        raise HTTPException(status_code=400, detail="Ruta de archivo inválida.")
-
-    if not abs_path.exists():
-        raise HTTPException(status_code=404, detail="Archivo no encontrado en disco.")
+        raise HTTPException(status_code=400, detail="Ruta inválida (fuera de /uploads).")
 
     filename = getattr(d, "original_filename", None) or f"{d.doc_type.value}_{d.id}"
     media_type = d.content_type or "application/octet-stream"

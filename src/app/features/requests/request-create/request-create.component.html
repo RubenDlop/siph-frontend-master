@@ -1,1 +1,425 @@
-<p>request-create works!</p>
+<!-- src/app/features/requests/request-create/request-create.component.html -->
+
+<main class="relative min-h-[calc(100vh-70px)] overflow-hidden">
+  <!-- Premium background -->
+  <div aria-hidden="true" class="pointer-events-none absolute inset-0">
+    <!-- Blobs -->
+    <div class="absolute -top-28 left-[-14%] h-[560px] w-[560px] rounded-full bg-indigo-500/15 blur-3xl"></div>
+    <div class="absolute -top-32 right-[-12%] h-[620px] w-[620px] rounded-full bg-violet-500/10 blur-3xl"></div>
+    <div class="absolute bottom-[-20%] left-[10%] h-[560px] w-[560px] rounded-full bg-sky-500/10 blur-3xl"></div>
+
+    <!-- Grid -->
+    <div
+      class="absolute inset-0 opacity-[0.12]"
+      style="
+        background-image: linear-gradient(to right, rgba(15, 23, 42, 0.08) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(15, 23, 42, 0.08) 1px, transparent 1px);
+        background-size: 44px 44px;
+      "
+    ></div>
+
+    <!-- Base wash -->
+    <div class="absolute inset-0 bg-gradient-to-b from-slate-50 via-indigo-50/40 to-slate-50"></div>
+
+    <!-- Subtle vignette -->
+    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(99,102,241,0.12),transparent_55%)]"></div>
+  </div>
+
+  <section class="relative mx-auto w-full max-w-6xl px-4 py-10">
+    <!-- Header -->
+    <header class="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+      <div class="max-w-3xl">
+        <div
+          class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/70 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur"
+        >
+          <span class="h-2 w-2 rounded-full bg-indigo-600"></span>
+          Solicitudes · SIPH
+          <span class="mx-1 h-4 w-px bg-slate-200"></span>
+          <span class="text-slate-500">Crear</span>
+        </div>
+
+        <h1 class="mt-3 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
+          Solicitar un técnico
+        </h1>
+
+        <p class="mt-2 text-sm leading-relaxed text-slate-600">
+          Describe el problema y marca tu <b class="text-slate-900">ubicación exacta</b> en el mapa para acelerar la atención.
+        </p>
+
+        <div class="mt-4 flex flex-wrap items-center gap-2">
+          <span
+            class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-semibold text-slate-700 shadow-sm"
+          >
+            <span class="h-1.5 w-1.5 rounded-full bg-slate-400"></span>
+            Requisito: ubicación (lat/lng)
+          </span>
+
+          <span
+            *ngIf="form.lat != null && form.lng != null"
+            class="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-semibold text-emerald-800"
+          >
+            <span class="h-1.5 w-1.5 rounded-full bg-emerald-600"></span>
+            Pin listo
+          </span>
+
+          <span
+            *ngIf="geoBusy"
+            class="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-[11px] font-semibold text-indigo-800"
+          >
+            <span class="h-1.5 w-1.5 rounded-full bg-indigo-600"></span>
+            Autocompletando…
+          </span>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <button
+          type="button"
+          (click)="useMyLocation()"
+          class="group inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm backdrop-blur transition hover:bg-white hover:shadow-md active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
+          [disabled]="geoBusy"
+        >
+          <svg class="h-4 w-4 text-slate-600" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 22s7-4.4 7-11a7 7 0 10-14 0c0 6.6 7 11 7 11z" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 11.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          Usar mi ubicación
+        </button>
+      </div>
+    </header>
+
+    <!-- Grid -->
+    <section class="mt-6 grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
+      <!-- FORM CARD -->
+      <div class="rounded-3xl border border-slate-200 bg-white/80 p-5 shadow-[0_18px_60px_rgba(2,6,23,0.10)] backdrop-blur sm:p-6">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <h2 class="text-base font-semibold text-slate-900">Detalles del servicio</h2>
+            <p class="mt-1 text-xs text-slate-600">Campos claros, sin fricción. Lo esencial primero.</p>
+          </div>
+
+          <div class="hidden sm:block">
+            <span class="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-[11px] font-semibold text-indigo-800">
+              Crear solicitud
+            </span>
+          </div>
+        </div>
+
+        <div class="mt-5 grid gap-4">
+          <!-- Categoría -->
+          <div>
+            <label class="text-xs font-semibold text-slate-600">Categoría</label>
+            <select
+              [(ngModel)]="form.category"
+              class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none ring-indigo-500/20 focus:ring-4"
+            >
+              <option value="GENERAL">General</option>
+              <option value="PLOMERIA">Plomería</option>
+              <option value="ELECTRICIDAD">Electricidad</option>
+              <option value="CARPINTERIA">Carpintería</option>
+              <option value="PINTURA">Pintura</option>
+              <option value="CERRAJERIA">Cerrajería</option>
+              <option value="OTROS">Otros</option>
+            </select>
+          </div>
+
+          <!-- Título -->
+          <div>
+            <label class="text-xs font-semibold text-slate-600">Título</label>
+            <input
+              [(ngModel)]="form.title"
+              class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none ring-indigo-500/20 focus:ring-4"
+              placeholder="Ej: Se dañó el tomacorriente de la sala"
+              autocomplete="off"
+            />
+            <p class="mt-1 text-[11px] text-slate-500">Corto y directo. Ejemplo: “Fuga en lavaplatos”.</p>
+          </div>
+
+          <!-- Descripción -->
+          <div>
+            <label class="text-xs font-semibold text-slate-600">Descripción</label>
+            <textarea
+              [(ngModel)]="form.description"
+              rows="5"
+              class="mt-2 w-full resize-y rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none ring-indigo-500/20 focus:ring-4"
+              placeholder="Describe qué pasó, desde cuándo, si hay riesgo (chispas/agua/fugas), etc."
+            ></textarea>
+            <p class="mt-1 text-[11px] text-slate-500">Mientras más contexto, mejor matching del técnico.</p>
+          </div>
+
+          <!-- Urgencia / Horario -->
+          <div class="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label class="text-xs font-semibold text-slate-600">Urgencia</label>
+              <select
+                [(ngModel)]="form.urgency"
+                class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none ring-indigo-500/20 focus:ring-4"
+              >
+                <option value="NORMAL">Normal</option>
+                <option value="URGENT">Urgente</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="text-xs font-semibold text-slate-600">Horario</label>
+              <select
+                [(ngModel)]="form.time_window"
+                class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none ring-indigo-500/20 focus:ring-4"
+              >
+                <option value="MAÑANA">Mañana</option>
+                <option value="TARDE">Tarde</option>
+                <option value="NOCHE">Noche</option>
+                <option value="FLEXIBLE">Flexible</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Presupuesto -->
+          <div class="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label class="text-xs font-semibold text-slate-600">Presupuesto mín.</label>
+              <input
+                type="number"
+                [(ngModel)]="form.budget_min"
+                class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none ring-indigo-500/20 focus:ring-4"
+                placeholder="0"
+                inputmode="numeric"
+              />
+            </div>
+
+            <div>
+              <label class="text-xs font-semibold text-slate-600">Presupuesto máx.</label>
+              <input
+                type="number"
+                [(ngModel)]="form.budget_max"
+                class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none ring-indigo-500/20 focus:ring-4"
+                placeholder="0"
+                inputmode="numeric"
+              />
+            </div>
+          </div>
+
+          <div class="my-1 h-px w-full bg-slate-200/70"></div>
+
+          <!-- Dirección -->
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <h3 class="text-sm font-semibold text-slate-900">Dirección</h3>
+              <p class="mt-1 text-[11px] text-slate-500">
+                Opcional. Se puede <b class="text-slate-700">autocompletar desde el pin</b> y ajustar si quieres.
+              </p>
+
+              <div class="mt-2 flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  (click)="enableAutoFill()"
+                  [disabled]="geoBusy || form.lat==null || form.lng==null"
+                  class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-3 py-2 text-[11px] font-semibold text-slate-900 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 active:scale-[0.99]"
+                >
+                  {{ geoBusy ? 'Autocompletando…' : 'Autocompletar desde pin' }}
+                </button>
+
+                <button
+                  type="button"
+                  (click)="searchAddressOnMap()"
+                  [disabled]="geoBusy"
+                  class="inline-flex items-center justify-center rounded-2xl border border-indigo-200 bg-indigo-50 px-3 py-2 text-[11px] font-semibold text-indigo-900 shadow-sm transition hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-60 active:scale-[0.99]"
+                >
+                  {{ geoBusy ? 'Buscando…' : 'Buscar en el mapa' }}
+                </button>
+
+                <span class="text-[11px] text-slate-500">
+                  Tip: el <b class="text-slate-700">pin manda</b>; el texto confirma.
+                </span>
+              </div>
+            </div>
+
+            <span class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-semibold text-slate-700">
+              Opcional
+            </span>
+          </div>
+
+          <div class="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label class="text-xs font-semibold text-slate-600">Ciudad</label>
+              <input
+                [(ngModel)]="form.city"
+                (ngModelChange)="onAddressManualChange()"
+                class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none ring-indigo-500/20 focus:ring-4"
+                placeholder="Barranquilla"
+                autocomplete="address-level2"
+              />
+            </div>
+
+            <div>
+              <label class="text-xs font-semibold text-slate-600">Barrio</label>
+              <input
+                [(ngModel)]="form.neighborhood"
+                (ngModelChange)="onAddressManualChange()"
+                class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none ring-indigo-500/20 focus:ring-4"
+                placeholder="Ej: Las Delicias"
+                autocomplete="address-level3"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label class="text-xs font-semibold text-slate-600">Dirección</label>
+            <input
+              [(ngModel)]="form.address"
+              (ngModelChange)="onAddressManualChange()"
+              class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none ring-indigo-500/20 focus:ring-4"
+              placeholder="Ej: Calle 70 # 45-20"
+              autocomplete="street-address"
+            />
+          </div>
+
+          <div>
+            <label class="text-xs font-semibold text-slate-600">Referencia</label>
+            <input
+              [(ngModel)]="form.address_ref"
+              (ngModelChange)="onAddressManualChange()"
+              class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none ring-indigo-500/20 focus:ring-4"
+              placeholder="Ej: Casa azul, frente al parque"
+              autocomplete="off"
+            />
+          </div>
+
+          <div class="my-1 h-px w-full bg-slate-200/70"></div>
+
+          <!-- Contacto -->
+          <div>
+            <h3 class="text-sm font-semibold text-slate-900">Contacto</h3>
+            <p class="mt-1 text-[11px] text-slate-500">Asegura una comunicación rápida con el técnico.</p>
+          </div>
+
+          <div class="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label class="text-xs font-semibold text-slate-600">Nombre</label>
+              <input
+                [(ngModel)]="form.contact_name"
+                class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none ring-indigo-500/20 focus:ring-4"
+                placeholder="Tu nombre"
+                autocomplete="name"
+              />
+            </div>
+
+            <div>
+              <label class="text-xs font-semibold text-slate-600">Teléfono</label>
+              <input
+                [(ngModel)]="form.contact_phone"
+                class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none ring-indigo-500/20 focus:ring-4"
+                placeholder="Ej: 3001234567"
+                autocomplete="tel"
+                inputmode="tel"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label class="text-xs font-semibold text-slate-600">Preferencia</label>
+            <select
+              [(ngModel)]="form.contact_pref"
+              class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none ring-indigo-500/20 focus:ring-4"
+            >
+              <option value="WHATSAPP">WhatsApp</option>
+              <option value="CALL">Llamada</option>
+              <option value="CHAT">Chat</option>
+            </select>
+          </div>
+
+          <!-- Alerts -->
+          <div *ngIf="errorMsg || successMsg" class="grid gap-2" aria-live="polite">
+            <div
+              *ngIf="errorMsg"
+              class="flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-900"
+              role="alert"
+            >
+              <span class="mt-1 h-2 w-2 shrink-0 rounded-full bg-rose-600"></span>
+              <div class="flex-1">
+                <div class="font-semibold">Revisa esto</div>
+                <div class="text-rose-800 opacity-90">{{ errorMsg }}</div>
+              </div>
+            </div>
+
+            <div
+              *ngIf="successMsg"
+              class="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900"
+            >
+              <span class="mt-1 h-2 w-2 shrink-0 rounded-full bg-emerald-600"></span>
+              <div class="flex-1">
+                <div class="font-semibold">Listo</div>
+                <div class="text-emerald-800 opacity-90">{{ successMsg }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- CTA -->
+          <button
+            class="group mt-1 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-indigo-200 bg-gradient-to-br from-indigo-600 to-indigo-700 px-4 py-3 text-sm font-semibold text-white shadow-[0_16px_34px_rgba(79,70,229,0.25)] transition hover:shadow-[0_22px_46px_rgba(79,70,229,0.30)] disabled:cursor-not-allowed disabled:opacity-60 active:scale-[0.99]"
+            [disabled]="loading || !canSubmit()"
+            (click)="submit()"
+          >
+            <svg *ngIf="loading" class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 2a10 10 0 1010 10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            {{ loading ? 'Creando…' : 'Crear solicitud' }}
+          </button>
+
+          <p class="text-[11px] text-slate-500">
+            * Obligatorio: marcar ubicación exacta (lat/lng) en el mapa.
+          </p>
+        </div>
+      </div>
+
+      <!-- MAP CARD -->
+      <div class="rounded-3xl border border-slate-200 bg-white/80 shadow-[0_18px_60px_rgba(2,6,23,0.10)] backdrop-blur lg:sticky lg:top-24">
+        <div class="flex items-start justify-between gap-4 border-b border-slate-200/70 px-5 py-4 sm:px-6">
+          <div>
+            <h2 class="text-base font-semibold text-slate-900">Ubicación exacta</h2>
+            <p class="mt-1 text-xs text-slate-600">Haz click en el mapa para colocar el marcador (puedes mover el pin).</p>
+
+            <p *ngIf="geoBusy" class="mt-1 text-[11px] text-indigo-600">
+              Actualizando datos desde el mapa…
+            </p>
+          </div>
+
+          <div *ngIf="form.lat != null && form.lng != null"
+               class="rounded-2xl border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-semibold text-indigo-900">
+            <div class="text-[11px] text-indigo-700">Coordenadas</div>
+            <div class="mt-0.5 space-y-0.5">
+              <div>Lat: <b>{{ form.lat }}</b></div>
+              <div>Lng: <b>{{ form.lng }}</b></div>
+              <div *ngIf="form.accuracy_m">Precisión: <b>{{ form.accuracy_m }} m</b></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-4 sm:p-6">
+     <div class="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50" ngSkipHydration>
+  <div #mapEl id="reqMap" class="h-[360px] w-full sm:h-[400px] lg:h-[440px]"></div>
+</div>
+        </div>
+
+        <div class="border-t border-slate-200/70 px-5 py-4 sm:px-6">
+          <button
+            class="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-50 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
+            type="button"
+            (click)="useMyLocation()"
+            [disabled]="geoBusy"
+          >
+            <svg class="h-4 w-4 text-slate-600" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 22s7-4.4 7-11a7 7 0 10-14 0c0 6.6 7 11 7 11z" stroke="currentColor" stroke-width="2"/>
+              <path d="M12 11.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            Usar mi ubicación exacta
+          </button>
+
+          <p class="mt-2 text-xs text-slate-500">
+            Si el navegador pregunta permisos, acepta “Permitir”.
+          </p>
+        </div>
+      </div>
+    </section>
+  </section>
+</main>
