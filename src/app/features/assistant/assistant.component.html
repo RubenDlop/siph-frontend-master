@@ -1,0 +1,87 @@
+<main class="assistant-page">
+  <section class="assistant-wrap">
+    <header class="assistant-hero">
+      <div class="assistant-hero__content">
+        <div class="assistant-badge">
+          <span class="assistant-badge__dot"></span>
+          Asistente IA de SIPH
+        </div>
+
+        <h1>Soporte inteligente del proyecto SIPH</h1>
+
+        <p>
+          Consulta módulos, rutas, estados, formularios, verificación de técnicos,
+          documentos y flujo administrativo sin salir de la plataforma.
+        </p>
+
+        <div class="assistant-chips">
+          <span>Solicitudes</span>
+          <span>Roles</span>
+          <span>Verificación</span>
+          <span>Documentos</span>
+          <span>Admin</span>
+          <span>Rutas</span>
+        </div>
+      </div>
+    </header>
+
+    <section class="assistant-grid">
+      <aside class="assistant-side">
+        <article class="assistant-side__card">
+          <h3>Qué puede responder</h3>
+          <ul>
+            <li>Cómo crear una solicitud</li>
+            <li>Qué significa cada estado</li>
+            <li>Qué hace cada pantalla</li>
+            <li>Cómo funciona la postulación de técnicos</li>
+            <li>Qué documentos se manejan</li>
+            <li>Qué puede hacer el administrador</li>
+          </ul>
+        </article>
+
+        <article class="assistant-side__card">
+          <h3>Alcance</h3>
+          <ul>
+            <li>USER, WORKER y ADMIN</li>
+            <li>Rutas principales del frontend</li>
+            <li>Solicitudes y seguimiento</li>
+            <li>Verificación y flujo documental</li>
+            <li>Asistente centrado solo en SIPH</li>
+          </ul>
+        </article>
+
+        <article class="assistant-side__card">
+          <h3>Preguntas sugeridas</h3>
+          <div class="assistant-suggestions">
+            <span *ngFor="let item of suggestions">{{ item }}</span>
+          </div>
+        </article>
+      </aside>
+
+      <section class="assistant-panel">
+        <div class="assistant-panel__top">
+          <div class="assistant-panel__title">
+            <h2>Asistente local</h2>
+            <p>Integrado con Gradio y enfocado únicamente en SIPH.</p>
+          </div>
+
+          <div class="assistant-panel__status">
+            <span>Local</span>
+            <span>Privado</span>
+            <span>Contextual</span>
+          </div>
+        </div>
+
+        <div class="assistant-frame-shell">
+          <iframe
+            class="assistant-frame"
+            [src]="safeUrl"
+            title="Asistente SIPH"
+            loading="lazy"
+            referrerpolicy="no-referrer"
+          ></iframe>
+        </div>
+      </section>
+    </section>
+  </section>
+</main>

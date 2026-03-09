@@ -32,3 +32,25 @@ __pycache__/
 
 # Uploads / files storage
 backend/uploads/
+
+# Node / Angular
+node_modules/
+dist/
+.angular/
+coverage/
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Entornos / secretos
+.env
+backend/.env
+qwen-local-chatbot/.env
+
+# Qwen local
+qwen-local-chatbot/.venv/
+qwen-local-chatbot/__pycache__/

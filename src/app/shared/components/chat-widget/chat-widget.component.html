@@ -1,0 +1,69 @@
+<!-- FAB (burbuja flotante) -->
+<button
+  *ngIf="!hideFab"
+  class="cw-fab"
+  type="button"
+  (click)="toggle()"
+  aria-label="Abrir asistente"
+>
+  <span class="cw-fab__avatar">{{ initials }}</span>
+  <span class="cw-fab__text">
+    <span class="cw-fab__title">Asistente IA</span>
+    <span class="cw-fab__sub">Local</span>
+  </span>
+</button>
+
+<!-- Overlay FULL SCREEN -->
+<div
+  *ngIf="open"
+  class="cw-overlay"
+  role="dialog"
+  aria-modal="true"
+  (click)="closeOnBackdrop($event)"
+>
+  <section class="cw-panel" (click)="$event.stopPropagation()">
+    <header class="cw-head">
+      <div class="cw-user">
+        <div class="cw-user__avatar">{{ initials }}</div>
+        <div class="cw-user__meta">
+          <div class="cw-user__name">{{ userName }}</div>
+          <div class="cw-user__role">IA Local · {{ userRole }}</div>
+        </div>
+      </div>
+
+      <div class="cw-actions">
+        <button class="cw-btn cw-btn--ghost" type="button" (click)="openNewTab()">
+          Abrir en pestaña
+        </button>
+
+        <button class="cw-btn cw-btn--close" type="button" (click)="close()" aria-label="Cerrar">
+          ✕
+        </button>
+      </div>
+    </header>
+
+    <div class="cw-body">
+      <div *ngIf="!safeUrl" class="cw-empty">
+        <h3>No se pudo cargar el asistente</h3>
+        <p>
+          Verifica que Gradio esté corriendo y que el puerto coincida con
+          <code>gradioUrl</code> en <code>chat-widget.component.ts</code>.
+        </p>
+      </div>
+
+      <iframe
+        *ngIf="safeUrl"
+        class="cw-iframe"
+        [src]="safeUrl"
+        title="Chatbot Local"
+        loading="eager"
+      ></iframe>
+    </div>
+
+    <footer class="cw-foot">
+      <span class="cw-tip">
+        Tip: si Gradio arrancó en otro puerto (ej: 7861), cambia <code>gradioUrl</code>.
+      </span>
+    </footer>
+  </section>
+</div>

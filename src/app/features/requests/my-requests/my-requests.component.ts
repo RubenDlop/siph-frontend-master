@@ -32,13 +32,11 @@ export class MyRequestsComponent implements OnInit {
     this.reload();
   }
 
-  // ✅ Para chips
   setStatus(s: StatusFilter) {
     this.status = s;
     this.applyFilters();
   }
 
-  // ✅ KPIs (solo lectura)
   get countDone() {
     return (this.items || []).filter((x) => x.status === 'DONE').length;
   }

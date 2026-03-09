@@ -1,8 +1,9 @@
-<!-- src/app/features/requests/my-requests/my-requests.component.html -->
-
 <main class="mr-page relative min-h-[calc(100vh-70px)] overflow-hidden">
   <!-- Premium background -->
   <div aria-hidden="true" class="pointer-events-none absolute inset-0">
+    <!-- Base wash -->
+    <div class="absolute inset-0 bg-gradient-to-b from-slate-50 via-indigo-50/40 to-slate-50"></div>
+
     <!-- Soft blobs -->
     <div class="absolute -top-28 left-[-14%] h-[560px] w-[560px] rounded-full bg-indigo-500/15 blur-3xl"></div>
     <div class="absolute -top-32 right-[-12%] h-[620px] w-[620px] rounded-full bg-violet-500/10 blur-3xl"></div>
@@ -18,19 +19,17 @@
       "
     ></div>
 
-    <!-- Base wash -->
-    <div class="absolute inset-0 bg-gradient-to-b from-slate-50 via-indigo-50/40 to-slate-50"></div>
-
     <!-- Subtle vignette -->
-    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(99,102,241,0.12),transparent_55%)]"></div>
+    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(99,102,241,0.14),transparent_55%)]"></div>
+    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,rgba(14,165,233,0.10),transparent_60%)]"></div>
   </div>
 
-  <section class="relative mx-auto w-full max-w-6xl px-4 py-10">
+  <section class="relative mx-auto w-full max-w-6xl px-4 py-10 sm:py-12">
     <!-- Top header -->
-    <header class="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+    <header class="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
       <div class="max-w-3xl">
         <div
-          class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/70 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur"
+          class="inline-flex items-center gap-2 rounded-full border border-slate-200/70 bg-white/70 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur"
         >
           <span class="h-2 w-2 rounded-full bg-indigo-600"></span>
           Solicitudes · SIPH
@@ -45,6 +44,9 @@
         <p class="mt-2 text-sm leading-relaxed text-slate-600">
           Visualiza y administra tus solicitudes con información completa: ubicación, contacto, presupuesto, horarios y estado.
         </p>
+
+        <!-- subtle underline -->
+        <div class="mt-4 h-px w-full max-w-xl bg-gradient-to-r from-indigo-200 via-slate-200 to-transparent"></div>
       </div>
 
       <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -52,41 +54,80 @@
           type="button"
           (click)="reload()"
           [disabled]="loading"
-          class="group inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm backdrop-blur transition hover:bg-white hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 active:scale-[0.99]"
+          class="group inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm backdrop-blur transition hover:bg-white hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500/25 disabled:cursor-not-allowed disabled:opacity-60 active:scale-[0.99]"
+          aria-label="Actualizar solicitudes"
         >
-          <!-- refresh icon -->
-          <svg class="h-4 w-4 opacity-80 transition group-hover:rotate-180" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M20 12a8 8 0 10-2.34 5.66" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            <path d="M20 8v4h-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+          <!-- spinner / refresh -->
+          <span class="relative grid place-items-center">
+            <svg
+              *ngIf="!loading"
+              class="h-4 w-4 opacity-80 transition group-hover:rotate-180"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path d="M20 12a8 8 0 10-2.34 5.66" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M20 8v4h-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+
+            <svg
+              *ngIf="loading"
+              class="h-4 w-4 animate-spin"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                d="M12 2a10 10 0 1010 10"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                class="opacity-80"
+              />
+            </svg>
+          </span>
+
           {{ loading ? 'Actualizando…' : 'Actualizar' }}
         </button>
       </div>
     </header>
 
-    <!-- Error -->
+    <!-- Error-->
     <div
       *ngIf="errorMsg"
-      class="mt-5 flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50/90 px-4 py-3 text-sm text-rose-900 shadow-sm backdrop-blur"
+      class="mt-6 flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50/90 px-4 py-3 text-sm text-rose-900 shadow-sm backdrop-blur"
+      role="alert"
     >
-      <div class="mt-1 h-2 w-2 rounded-full bg-rose-600"></div>
+      <div class="mt-0.5 flex h-8 w-8 items-center justify-center rounded-2xl bg-rose-100 text-rose-700">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 9v5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M12 17h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+          <path d="M10.3 4.3l-7.6 13.2A2 2 0 004.4 20h15.2a2 2 0 001.7-2.9L13.7 4.3a2 2 0 00-3.4 0z"
+            stroke="currentColor" stroke-width="2" stroke-linejoin="round"
+          />
+        </svg>
+      </div>
+
       <div class="flex-1">
-        <div class="font-semibold text-rose-900">Revisa esto</div>
+        <div class="font-semibold">Revisa esto</div>
         <div class="text-rose-800/90">{{ errorMsg }}</div>
       </div>
+
       <button
         type="button"
         (click)="errorMsg=''"
-        class="rounded-xl px-2 py-1 text-xs font-semibold text-rose-900/70 hover:bg-rose-100"
+        class="rounded-xl px-2 py-1 text-xs font-semibold text-rose-900/70 hover:bg-rose-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-rose-500/20"
       >
         Cerrar
       </button>
     </div>
 
-    <!-- KPI Row (solo diseño, conteos desde TS) -->
+
+    <!-- KPI Row -->
     <div class="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       <!-- Total -->
-      <div class="rounded-3xl border border-slate-200 bg-white/75 p-4 shadow-[0_16px_50px_rgba(2,6,23,0.08)] backdrop-blur">
+      <div class="relative overflow-hidden rounded-3xl border border-slate-200 bg-white/75 p-4 shadow-[0_16px_50px_rgba(2,6,23,0.08)] backdrop-blur">
+        <div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-slate-200 via-indigo-200 to-violet-200"></div>
         <div class="flex items-center justify-between">
           <div class="text-xs font-semibold text-slate-600">Total</div>
           <span class="rounded-full bg-slate-900/5 px-2 py-1 text-[11px] font-semibold text-slate-700">SIPH</span>
@@ -96,7 +137,8 @@
       </div>
 
       <!-- Activas -->
-      <div class="rounded-3xl border border-slate-200 bg-white/75 p-4 shadow-[0_16px_50px_rgba(2,6,23,0.08)] backdrop-blur">
+      <div class="relative overflow-hidden rounded-3xl border border-slate-200 bg-white/75 p-4 shadow-[0_16px_50px_rgba(2,6,23,0.08)] backdrop-blur">
+        <div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-indigo-200 via-sky-200 to-transparent"></div>
         <div class="flex items-center justify-between">
           <div class="text-xs font-semibold text-slate-600">Activas</div>
           <span class="rounded-full bg-indigo-500/10 px-2 py-1 text-[11px] font-semibold text-indigo-800">En curso</span>
@@ -106,7 +148,8 @@
       </div>
 
       <!-- Finalizadas -->
-      <div class="rounded-3xl border border-slate-200 bg-white/75 p-4 shadow-[0_16px_50px_rgba(2,6,23,0.08)] backdrop-blur">
+      <div class="relative overflow-hidden rounded-3xl border border-slate-200 bg-white/75 p-4 shadow-[0_16px_50px_rgba(2,6,23,0.08)] backdrop-blur">
+        <div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-200 via-slate-200 to-transparent"></div>
         <div class="flex items-center justify-between">
           <div class="text-xs font-semibold text-slate-600">Finalizadas</div>
           <span class="rounded-full bg-emerald-500/10 px-2 py-1 text-[11px] font-semibold text-emerald-800">DONE</span>
@@ -116,7 +159,8 @@
       </div>
 
       <!-- Canceladas -->
-      <div class="rounded-3xl border border-slate-200 bg-white/75 p-4 shadow-[0_16px_50px_rgba(2,6,23,0.08)] backdrop-blur">
+      <div class="relative overflow-hidden rounded-3xl border border-slate-200 bg-white/75 p-4 shadow-[0_16px_50px_rgba(2,6,23,0.08)] backdrop-blur">
+        <div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-rose-200 via-slate-200 to-transparent"></div>
         <div class="flex items-center justify-between">
           <div class="text-xs font-semibold text-slate-600">Canceladas</div>
           <span class="rounded-full bg-rose-500/10 px-2 py-1 text-[11px] font-semibold text-rose-800">CANCELED</span>
@@ -127,46 +171,51 @@
     </div>
 
     <!-- Main card -->
-    <div
-      class="mt-6 rounded-3xl border border-slate-200 bg-white/80 shadow-[0_18px_60px_rgba(2,6,23,0.10)] backdrop-blur"
-    >
-      <!-- Filters: control panel -->
-      <div class="border-b border-slate-200/70 px-6 py-5">
+    <div class="mt-6 rounded-3xl border border-slate-200 bg-white/80 shadow-[0_18px_60px_rgba(2,6,23,0.10)] backdrop-blur">
+      <!-- Filters -->
+      <div class="border-b border-slate-200/70 px-5 py-5 sm:px-6">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <!-- Search -->
           <div class="grid w-full gap-3 sm:grid-cols-2 lg:max-w-4xl">
+            <!-- Search -->
             <div>
               <label class="text-xs font-semibold text-slate-600">Buscar</label>
-              <div class="mt-2 flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2.5 ring-indigo-500/20 focus-within:ring-4">
+              <div
+                class="mt-2 flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2.5 ring-indigo-500/20 transition focus-within:ring-4"
+              >
                 <svg class="h-4 w-4 text-slate-400" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                   <path d="M11 19a8 8 0 100-16 8 8 0 000 16z" stroke="currentColor" stroke-width="2"/>
                 </svg>
+
                 <input
                   [(ngModel)]="q"
                   (ngModelChange)="applyFilters()"
                   class="w-full bg-transparent text-sm text-slate-900 placeholder:text-slate-400 outline-none"
                   placeholder="Título, categoría, descripción, ciudad, barrio, contacto…"
+                  autocomplete="off"
                 />
+
                 <button
                   *ngIf="q"
                   type="button"
                   (click)="q=''; applyFilters()"
-                  class="rounded-xl px-2 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-100"
+                  class="rounded-xl px-2 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500/20"
                 >
                   Limpiar
                 </button>
               </div>
             </div>
 
-            <!-- Status chips (y select hidden para fallback) -->
+            <!-- Status -->
             <div>
               <label class="text-xs font-semibold text-slate-600">Estado</label>
 
+              <!-- ✅ FIX: ahora SÍ se ve en XS/SM/MD -->
               <select
-                class="mt-2 hidden w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none ring-indigo-500/20 focus:ring-4 sm:block lg:hidden"
+                class="mt-2 block w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none ring-indigo-500/20 focus:ring-4 lg:hidden"
                 [(ngModel)]="status"
                 (ngModelChange)="applyFilters()"
+                aria-label="Filtrar por estado"
               >
                 <option value="ALL">Todos</option>
                 <option value="CREATED">Creada</option>
@@ -177,12 +226,12 @@
                 <option value="CANCELED">Cancelada</option>
               </select>
 
-              <!-- Chips -->
-              <div class="mt-2 hidden items-center gap-2 overflow-x-auto pb-1 sm:hidden lg:flex">
+              <!-- Desktop chips -->
+              <div class="mt-2 hidden items-center gap-2 overflow-x-auto pb-1 lg:flex">
                 <button
                   type="button"
                   (click)="setStatus('ALL')"
-                  class="shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold shadow-sm transition active:scale-[0.99]"
+                  class="shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold shadow-sm transition active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500/20"
                   [ngClass]="status==='ALL'
                     ? 'border-slate-300 bg-slate-900 text-white'
                     : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'"
@@ -193,7 +242,7 @@
                 <button
                   type="button"
                   (click)="setStatus('CREATED')"
-                  class="shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold shadow-sm transition active:scale-[0.99]"
+                  class="shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold shadow-sm transition active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500/20"
                   [ngClass]="status==='CREATED'
                     ? 'border-slate-300 bg-slate-900 text-white'
                     : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'"
@@ -204,7 +253,7 @@
                 <button
                   type="button"
                   (click)="setStatus('MATCHING')"
-                  class="shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold shadow-sm transition active:scale-[0.99]"
+                  class="shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold shadow-sm transition active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500/20"
                   [ngClass]="status==='MATCHING'
                     ? 'border-amber-300 bg-amber-50 text-amber-800'
                     : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'"
@@ -215,7 +264,7 @@
                 <button
                   type="button"
                   (click)="setStatus('ASSIGNED')"
-                  class="shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold shadow-sm transition active:scale-[0.99]"
+                  class="shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold shadow-sm transition active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500/20"
                   [ngClass]="status==='ASSIGNED'
                     ? 'border-indigo-300 bg-indigo-50 text-indigo-800'
                     : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'"
@@ -226,7 +275,7 @@
                 <button
                   type="button"
                   (click)="setStatus('IN_PROGRESS')"
-                  class="shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold shadow-sm transition active:scale-[0.99]"
+                  class="shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold shadow-sm transition active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500/20"
                   [ngClass]="status==='IN_PROGRESS'
                     ? 'border-sky-300 bg-sky-50 text-sky-800'
                     : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'"
@@ -237,7 +286,7 @@
                 <button
                   type="button"
                   (click)="setStatus('DONE')"
-                  class="shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold shadow-sm transition active:scale-[0.99]"
+                  class="shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold shadow-sm transition active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500/20"
                   [ngClass]="status==='DONE'
                     ? 'border-emerald-300 bg-emerald-50 text-emerald-800'
                     : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'"
@@ -248,7 +297,7 @@
                 <button
                   type="button"
                   (click)="setStatus('CANCELED')"
-                  class="shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold shadow-sm transition active:scale-[0.99]"
+                  class="shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold shadow-sm transition active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500/20"
                   [ngClass]="status==='CANCELED'
                     ? 'border-rose-300 bg-rose-50 text-rose-800'
                     : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'"
@@ -272,9 +321,9 @@
       </div>
 
       <!-- Body -->
-      <div class="px-6 py-6">
-        <!-- Loading: skeleton -->
-        <div *ngIf="loading" class="space-y-3">
+      <div class="px-5 py-6 sm:px-6">
+        <!-- Loading -->
+        <div *ngIf="loading" class="space-y-3" aria-live="polite">
           <div class="h-10 w-full animate-pulse rounded-2xl border border-slate-200 bg-slate-50"></div>
           <div class="h-10 w-full animate-pulse rounded-2xl border border-slate-200 bg-slate-50"></div>
           <div class="h-10 w-full animate-pulse rounded-2xl border border-slate-200 bg-slate-50"></div>
@@ -299,7 +348,7 @@
         <!-- Desktop table -->
         <div *ngIf="!loading && filtered.length > 0" class="hidden lg:block">
           <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-            <div class="max-h-[70vh] overflow-auto">
+            <div class="mr-scroll max-h-[72vh] overflow-auto">
               <table class="w-full min-w-[1120px] border-collapse">
                 <thead class="sticky top-0 z-10 bg-slate-50">
                   <tr class="border-b border-slate-200">
@@ -317,12 +366,14 @@
 
                 <tbody>
                   <ng-container *ngFor="let r of filtered; trackBy: trackById">
-                    <tr class="border-b border-slate-100 hover:bg-slate-50/60">
+                    <tr class="group border-b border-slate-100 hover:bg-slate-50/60">
                       <td class="px-4 py-4 align-top">
                         <div class="flex items-start gap-3">
-                          <div class="mt-0.5 h-9 w-9 shrink-0 rounded-2xl border border-slate-200 bg-slate-50"></div>
+                          <div class="mt-0.5 h-9 w-9 shrink-0 rounded-2xl border border-slate-200 bg-gradient-to-b from-slate-50 to-white"></div>
                           <div class="min-w-0">
-                            <div class="truncate font-semibold text-slate-900">{{ r.title }}</div>
+                            <div class="truncate font-semibold text-slate-900">
+                              {{ r.title }}
+                            </div>
                             <div class="mt-1 line-clamp-2 text-xs leading-relaxed text-slate-600">
                               {{ r.description || '—' }}
                             </div>
@@ -338,9 +389,13 @@
 
                       <td class="px-4 py-4 align-top">
                         <span
-                          class="inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold"
+                          class="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold"
                           [ngClass]="urgencyClass(r.urgency)"
                         >
+                          <span class="h-1.5 w-1.5 rounded-full"
+                            [ngClass]="r.urgency === 'URGENT' ? 'bg-rose-600' : 'bg-slate-400'"
+                            aria-hidden="true"
+                          ></span>
                           {{ r.urgency === 'URGENT' ? 'Urgente' : 'Normal' }}
                         </span>
                       </td>
@@ -382,7 +437,7 @@
                           <button
                             type="button"
                             (click)="toggle(r.id)"
-                            class="group rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-900 shadow-sm transition hover:bg-slate-50 active:scale-[0.99]"
+                            class="group/btn rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-900 shadow-sm transition hover:bg-slate-50 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500/20"
                           >
                             <span class="inline-flex items-center gap-2">
                               <svg class="h-4 w-4 text-slate-500" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -397,7 +452,7 @@
                             type="button"
                             (click)="cancel(r)"
                             [disabled]="!canCancel(r)"
-                            class="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-900 shadow-sm transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60 active:scale-[0.99]"
+                            class="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-900 shadow-sm transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-rose-500/20"
                           >
                             Cancelar
                           </button>
@@ -407,28 +462,30 @@
 
                     <tr *ngIf="expandedId === r.id" class="border-b border-slate-100 bg-slate-50/40">
                       <td colspan="9" class="px-4 py-4">
-                        <div class="grid gap-4 rounded-2xl border border-slate-200 bg-white p-4 sm:grid-cols-2">
-                          <div>
-                            <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Descripción</div>
-                            <div class="mt-1 text-sm text-slate-900">{{ r.description || '—' }}</div>
-                          </div>
-
-                          <div>
-                            <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Referencia</div>
-                            <div class="mt-1 text-sm text-slate-900">{{ r.address_ref || '—' }}</div>
-                          </div>
-
-                          <div>
-                            <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Coordenadas</div>
-                            <div class="mt-1 text-sm text-slate-900">
-                              Lat: <b>{{ r.lat ?? '—' }}</b> · Lng: <b>{{ r.lng ?? '—' }}</b>
-                              <span *ngIf="r.accuracy_m"> · Precisión: <b>{{ r.accuracy_m }} m</b></span>
+                        <div class="rounded-2xl border border-slate-200 bg-white p-4">
+                          <div class="grid gap-4 sm:grid-cols-2">
+                            <div>
+                              <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Descripción</div>
+                              <div class="mt-1 text-sm text-slate-900">{{ r.description || '—' }}</div>
                             </div>
-                          </div>
 
-                          <div>
-                            <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Usuario</div>
-                            <div class="mt-1 text-sm text-slate-900">user_id: <b>{{ r.user_id }}</b></div>
+                            <div>
+                              <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Referencia</div>
+                              <div class="mt-1 text-sm text-slate-900">{{ r.address_ref || '—' }}</div>
+                            </div>
+
+                            <div>
+                              <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Coordenadas</div>
+                              <div class="mt-1 text-sm text-slate-900">
+                                Lat: <b>{{ r.lat ?? '—' }}</b> · Lng: <b>{{ r.lng ?? '—' }}</b>
+                                <span *ngIf="r.accuracy_m"> · Precisión: <b>{{ r.accuracy_m }} m</b></span>
+                              </div>
+                            </div>
+
+                            <div>
+                              <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Usuario</div>
+                              <div class="mt-1 text-sm text-slate-900">user_id: <b>{{ r.user_id }}</b></div>
+                            </div>
                           </div>
                         </div>
                       </td>
@@ -467,10 +524,18 @@
                   </span>
 
                   <span
-                    class="inline-flex items-center rounded-full border px-2.5 py-1 font-semibold"
+                    class="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 font-semibold"
                     [ngClass]="urgencyClass(r.urgency)"
                   >
+                    <span class="h-1.5 w-1.5 rounded-full"
+                      [ngClass]="r.urgency === 'URGENT' ? 'bg-rose-600' : 'bg-slate-400'"
+                      aria-hidden="true"
+                    ></span>
                     {{ r.urgency === 'URGENT' ? 'Urgente' : 'Normal' }}
+                  </span>
+
+                  <span class="ml-auto rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-semibold text-slate-600">
+                    {{ fmtDate(r.created_at || null) }}
                   </span>
                 </div>
 
@@ -498,17 +563,13 @@
                     </div>
                   </div>
                 </div>
-
-                <div class="text-[11px] text-slate-500">
-                  Creada: <span class="text-slate-700">{{ fmtDate(r.created_at || null) }}</span>
-                </div>
               </div>
 
               <div class="mt-4 flex flex-wrap gap-2">
                 <button
                   type="button"
                   (click)="toggle(r.id)"
-                  class="flex-1 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-900 shadow-sm transition hover:bg-slate-50 active:scale-[0.99]"
+                  class="flex-1 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-900 shadow-sm transition hover:bg-slate-50 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500/20"
                 >
                   {{ expandedId === r.id ? 'Ocultar detalle' : 'Ver detalle' }}
                 </button>
@@ -517,7 +578,7 @@
                   type="button"
                   (click)="cancel(r)"
                   [disabled]="!canCancel(r)"
-                  class="flex-1 rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-900 shadow-sm transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60 active:scale-[0.99]"
+                  class="flex-1 rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-900 shadow-sm transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-rose-500/20"
                 >
                   Cancelar
                 </button>
