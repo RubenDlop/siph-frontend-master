@@ -41,7 +41,7 @@ app = FastAPI(title="SIPH API")
 # Ej:
 # CORS_ORIGINS=http://localhost:4200,http://127.0.0.1:4200,https://tu-dominio.com
 raw = os.getenv("CORS_ORIGINS", "").strip()
-allow_origins = [o.strip() for o in raw.split(",") if o.strip()]
+allow_origins = [o.strip() for o in  raw.split(",") if o.strip()]
 
 # fallback robusto
 if not allow_origins:
