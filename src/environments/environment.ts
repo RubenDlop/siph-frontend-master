@@ -1,6 +1,6 @@
 export const environment = {
   production: false,
-  apiUrl: 'https://siph-api-rubendlop.fly.dev',
+  apiUrl: 'https://siph-frontend-master.netlify.app',
   googleClientId:
     '1026227617402-hts4hu699cuo0gmh5fg8sh8ncjfdvo76.apps.googleusercontent.com',
   azure: {
