@@ -35,17 +35,17 @@ from .routers import (
 app = FastAPI(title="SIPH API")
 
 # =========================
-# CORS (DEV / Angular / ManyChat)
+# CORS (PROD + DEV + ManyChat)
 # =========================
-# Puedes definir CORS_ORIGINS en backend/.env separadas por coma
-# Ej:
-# CORS_ORIGINS=http://localhost:4200,http://127.0.0.1:4200,https://tu-dominio.com
+# En Fly configura:
+# CORS_ORIGINS=https://siph-frontend-master.netlify.app,http://localhost:4200,http://127.0.0.1:4200,http://localhost:5173,http://127.0.0.1:5173
 raw = os.getenv("CORS_ORIGINS", "").strip()
-allow_origins = [o.strip() for o in  raw.split(",") if o.strip()]
+allow_origins = [o.strip() for o in raw.split(",") if o.strip()]
 
-# fallback robusto
+# Fallback por si no existe CORS_ORIGINS
 if not allow_origins:
     allow_origins = [
+        "https://siph-frontend-master.netlify.app",
         "http://localhost:4200",
         "http://127.0.0.1:4200",
         "http://localhost:5173",
@@ -55,7 +55,6 @@ if not allow_origins:
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allow_origins,
-    # Permite localhost/127.0.0.1 con cualquier puerto en DEV
     allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
     allow_credentials=True,
     allow_methods=["*"],
@@ -83,8 +82,8 @@ app.include_router(technician_verification.router)  # /tech/verification
 # =========================
 # ADMIN routes
 # =========================
-app.include_router(admin_worker_applications.router)       # /admin/worker-applications
-app.include_router(admin_technician_verification.router)   # /admin/tech/verification
+app.include_router(admin_worker_applications.router)      # /admin/worker-applications
+app.include_router(admin_technician_verification.router)  # /admin/tech/verification
 
 # =========================
 # MANYCHAT routes
