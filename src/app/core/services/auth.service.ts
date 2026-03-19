@@ -27,7 +27,7 @@ export interface AuthResponse {
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-private readonly baseUrl = environment.apiUrl || 'https://siph-api-rubendlop.fly.dev';
+  private readonly baseUrl = this.resolveApiUrl();
   private readonly azure = environment.azure || {};
 
   private msalInstance: any = null;
@@ -37,7 +37,22 @@ private readonly baseUrl = environment.apiUrl || 'https://siph-api-rubendlop.fly
   constructor(
     private http: HttpClient,
     private storage: StorageService
-  ) {}
+  ) {
+    console.log('[AuthService] API URL:', this.baseUrl);
+  }
+
+  // =========================================================
+  // HELPERS
+  // =========================================================
+  private resolveApiUrl(): string {
+    const envUrl = (environment.apiUrl || '').trim();
+
+    if (envUrl) {
+      return envUrl.replace(/\/+$/, '');
+    }
+
+    return 'https://siph-api-rubendlop.fly.dev';
+  }
 
   // =========================================================
   // INIT
@@ -46,7 +61,6 @@ private readonly baseUrl = environment.apiUrl || 'https://siph-api-rubendlop.fly
     void this.getMsalClient();
   }
 
-  // Compatibilidad por si algún componente viejo lo sigue llamando
   async completeAzureRedirectIfNeeded(): Promise<AuthUser | null> {
     try {
       const pca = await this.getMsalClient();
@@ -228,7 +242,7 @@ private readonly baseUrl = environment.apiUrl || 'https://siph-api-rubendlop.fly
           pca.setActiveAccount(redirectResult.account);
         }
       } catch {
-        // Silencioso: usamos popup como flujo principal
+        // silencioso
       }
 
       const accounts = pca.getAllAccounts();
