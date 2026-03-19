@@ -27,7 +27,7 @@ export interface AuthResponse {
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly baseUrl = environment.apiUrl || 'http://localhost:8000';
+private readonly baseUrl = environment.apiUrl || 'https://siph-api-rubendlop.fly.dev';
   private readonly azure = environment.azure || {};
 
   private msalInstance: any = null;
