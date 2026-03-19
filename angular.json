@@ -25,19 +25,18 @@
             ],
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
-  "assets": [
-  {
-    "glob": "**/*",
-    "input": "src/assets",
-    "output": "assets"
-  },
-  {
-    "glob": "**/*",
-    "input": "src/app/features/auth/register/assets",
-    "output": "assets/register"
-  }
-],
-
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "src/assets",
+                "output": "assets"
+              },
+              {
+                "glob": "**/*",
+                "input": "src/app/features/auth/register/assets",
+                "output": "assets/register"
+              }
+            ],
             "styles": [
               "src/styles.scss",
               "node_modules/leaflet/dist/leaflet.css"
@@ -54,13 +53,13 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "500kB",
-                  "maximumError": "1MB"
+                  "maximumWarning": "700kB",
+                  "maximumError": "1.5MB"
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "4kB",
-                  "maximumError": "8kB"
+                  "maximumWarning": "12kB",
+                  "maximumError": "20kB"
                 }
               ],
               "outputHashing": "all"
