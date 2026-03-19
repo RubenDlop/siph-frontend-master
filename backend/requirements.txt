@@ -10,4 +10,5 @@ pydantic==2.9.2
 pydantic-settings==2.5.2
 google-auth[requests]==2.35.0
 python-multipart==0.0.9
-
+PyJWT>=2.10,<3
+cryptography>=46,<47

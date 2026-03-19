@@ -10,18 +10,39 @@
 
         <h1>Login</h1>
         <p class="sub">
-          Inicia sesión para continuar. Puedes usar Google o tu correo y contraseña.
+          Inicia sesión para continuar. Puedes usar Microsoft, Google o tu correo y contraseña.
         </p>
 
-        <!-- ✅ GOOGLE (botón visual + botón real invisible encima) -->
-        <div class="googleArea">
+        <!-- MICROSOFT / AZURE -->
+        <div class="microsoftArea">
+          <button
+            class="btn microsoftBtn"
+            type="button"
+            (click)="loginAzure()"
+            [disabled]="loading"
+          >
+            <span class="btn__text">
+              {{ loading ? 'Conectando...' : 'Continuar con Microsoft' }}
+            </span>
+          </button>
+        </div>
+
+        <!-- divisor entre Microsoft y Google solo si Google está disponible -->
+        <div class="divider" *ngIf="googleReady"><span>o</span></div>
+
+        <!-- GOOGLE -->
+        <div class="googleArea" *ngIf="googleReady">
           <div
             class="gsiWrap"
             [class.gsiWrap--disabled]="loading || !googleReady"
             [attr.aria-disabled]="loading || !googleReady"
           >
-            <!-- Botón ROJO visual -->
-            <button class="googleBtnRed" type="button" [disabled]="loading || !googleReady">
+            <!-- Botón visual -->
+            <button
+              class="googleBtnRed"
+              type="button"
+              [disabled]="loading || !googleReady"
+            >
               <span class="googleBtnRed__ico" aria-hidden="true">
                 <svg viewBox="0 0 48 48">
                   <path
@@ -50,12 +71,12 @@
               <span class="googleBtnRed__spacer" aria-hidden="true"></span>
             </button>
 
-            <!-- ✅ AQUÍ Google renderiza SU botón real (invisible pero clickable) -->
+            <!-- Google renderiza aquí su botón real -->
             <div #gsiBtn class="gsiBtnOverlay" aria-label="Google Sign-In real"></div>
           </div>
-
-          <div class="divider"><span>o</span></div>
         </div>
+
+        <div class="divider"><span>o</span></div>
 
         <!-- CORREO/CONTRASEÑA -->
         <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
@@ -100,7 +121,9 @@
             [disabled]="loading || form.invalid"
             [class.is-loading]="loading"
           >
-            <span class="btn__text">{{ loading ? 'Entrando...' : 'Iniciar sesión' }}</span>
+            <span class="btn__text">
+              {{ loading ? 'Entrando...' : 'Iniciar sesión' }}
+            </span>
           </button>
 
           <div class="foot">

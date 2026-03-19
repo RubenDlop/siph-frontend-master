@@ -6,6 +6,7 @@ from . import (
     technician_verification,
     admin_technician_verification,
     admin_worker_applications,
+    manychat
 )
 
 __all__ = [
@@ -15,4 +16,5 @@ __all__ = [
     "admin_worker_applications",
     "technician_verification",
     "admin_technician_verification",
+    "manychat"
 ]

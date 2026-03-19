@@ -5,13 +5,7 @@ from typing import Optional
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-# ✅ Asegura que el .env se lea SIEMPRE desde backend/.env
-# backend/
-#   .env
-#   app/
-#     core/
-#       config.py
-BASE_DIR = Path(__file__).resolve().parents[2]  # -> backend/
+BASE_DIR = Path(__file__).resolve().parents[2]
 ENV_FILE = BASE_DIR / ".env"
 
 
@@ -28,15 +22,51 @@ class Settings(BaseSettings):
         validation_alias="DATABASE_URL",
     )
 
-    jwt_secret_key: str = Field(default="change-me", validation_alias="JWT_SECRET_KEY")
-    jwt_algorithm: str = Field(default="HS256", validation_alias="JWT_ALGORITHM")
+    jwt_secret_key: str = Field(
+        default="change-me",
+        validation_alias="JWT_SECRET_KEY",
+    )
+    jwt_algorithm: str = Field(
+        default="HS256",
+        validation_alias="JWT_ALGORITHM",
+    )
     jwt_expiration_minutes: int = Field(
-        default=60, validation_alias="JWT_EXPIRATION_MINUTES"
+        default=60,
+        validation_alias="JWT_EXPIRATION_MINUTES",
     )
 
-    # ✅ No hardcode: viene del .env / docker env
     google_client_id: Optional[str] = Field(
-        default=None, validation_alias="GOOGLE_CLIENT_ID"
+        default=None,
+        validation_alias="GOOGLE_CLIENT_ID",
+    )
+
+    azure_tenant_id: Optional[str] = Field(
+        default=None,
+        validation_alias="AZURE_TENANT_ID",
+    )
+    azure_spa_client_id: Optional[str] = Field(
+        default=None,
+        validation_alias="AZURE_SPA_CLIENT_ID",
+    )
+    azure_api_client_id: Optional[str] = Field(
+        default=None,
+        validation_alias="AZURE_API_CLIENT_ID",
+    )
+    azure_authority: Optional[str] = Field(
+        default=None,
+        validation_alias="AZURE_AUTHORITY",
+    )
+    azure_api_scope: Optional[str] = Field(
+        default=None,
+        validation_alias="AZURE_API_SCOPE",
+    )
+
+    # =========================
+    # MANYCHAT
+    # =========================
+    manychat_shared_secret: Optional[str] = Field(
+        default=None,
+        validation_alias="MANYCHAT_SHARED_SECRET",
     )
 
 

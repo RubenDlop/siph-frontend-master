@@ -3,6 +3,7 @@ import { authGuard } from './core/guards/auth.guard';
 import { roleGuard } from './core/guards/role.guard';
 
 export const routes: Routes = [
+  // ✅ HOME (Landing)
   {
     path: '',
     loadComponent: () =>
@@ -80,6 +81,17 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/reviews/review-list/review-list.component').then(
         (m) => m.ReviewListComponent
+      ),
+  },
+
+  // ✅ 🤖 Asistente IA Local (Gradio) - pantalla completa (opcional)
+  // URL: /assistant
+  {
+    path: 'assistant',
+    canActivate: [authGuard], // ✅ quita authGuard si lo quieres público
+    loadComponent: () =>
+      import('./features/assistant/assistant.component').then(
+        (m) => m.AssistantComponent
       ),
   },
 

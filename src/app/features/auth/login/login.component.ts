@@ -12,6 +12,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { AuthService } from '../../../core/services/auth.service';
+import { AuthUser } from '../../../core/services/storage.service';
 import { environment } from '../../../../environments/environment';
 
 type Slide = { src: string; title: string; subtitle: string };
@@ -36,7 +37,6 @@ export class LoginComponent implements AfterViewInit, OnDestroy {
   private auth = inject(AuthService);
   private platformId = inject(PLATFORM_ID);
 
-  // ✅ mejor opcional para evitar crash si el elemento no existe por alguna razón
   @ViewChild('gsiBtn', { static: false }) gsiBtn?: ElementRef<HTMLDivElement>;
 
   loading = false;
@@ -44,10 +44,12 @@ export class LoginComponent implements AfterViewInit, OnDestroy {
   showPass = false;
   year = new Date().getFullYear();
 
-  // ✅ Google GSI
   googleReady = false;
   private googleClientId = '';
   private gsiRendered = false;
+
+  private azureInProgress = false;
+  private timer: any = null;
 
   form = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
@@ -82,7 +84,6 @@ export class LoginComponent implements AfterViewInit, OnDestroy {
   ];
 
   active = 0;
-  private timer: any = null;
 
   get currentSlide(): Slide {
     return this.slides[this.active] ?? this.slides[0];
@@ -93,15 +94,13 @@ export class LoginComponent implements AfterViewInit, OnDestroy {
 
     this.timer = setInterval(() => this.next(), 5500);
     this.initGoogle();
+    this.auth.initMicrosoftSession();
   }
 
   ngOnDestroy(): void {
     if (this.timer) clearInterval(this.timer);
   }
 
-  // =========================
-  // Carrusel
-  // =========================
   goTo(i: number) {
     this.active = i;
     this.resetTimer();
@@ -117,10 +116,31 @@ export class LoginComponent implements AfterViewInit, OnDestroy {
     this.timer = setInterval(() => this.next(), 5500);
   }
 
-  // =========================
-  // Login con correo
-  // =========================
+  private navigateAfterLogin(user: AuthUser) {
+    const redirect = this.route.snapshot.queryParamMap.get('redirect');
+    if (redirect) {
+      this.router.navigateByUrl(redirect);
+      return;
+    }
+
+    const role = (user?.role || 'USER').toUpperCase();
+
+    if (role === 'ADMIN') {
+      this.router.navigateByUrl('/admin/worker-applications');
+      return;
+    }
+
+    if (role === 'WORKER') {
+      this.router.navigateByUrl('/dashboard');
+      return;
+    }
+
+    this.router.navigateByUrl('/dashboard');
+  }
+
   submit() {
+    if (this.loading) return;
+
     this.errorMsg = '';
 
     if (this.form.invalid) {
@@ -135,22 +155,10 @@ export class LoginComponent implements AfterViewInit, OnDestroy {
       password: this.f.password.value!,
     };
 
-    const anyAuth = this.auth as any;
-    const req$ = anyAuth.login?.(payload);
-
-    if (!req$?.subscribe) {
-      this.loading = false;
-      this.errorMsg =
-        'No encuentro AuthService.login(). Crea login({email,password}) en tu AuthService.';
-      return;
-    }
-
-    req$.subscribe({
-      next: () => {
+    this.auth.login(payload).subscribe({
+      next: (user) => {
         this.loading = false;
-        const redirect = this.route.snapshot.queryParamMap.get('redirect') ?? '/dashboard';
-        // ✅ más seguro que navigate([redirect])
-        this.router.navigateByUrl(redirect);
+        this.navigateAfterLogin(user);
       },
       error: (err: any) => {
         this.loading = false;
@@ -163,9 +171,40 @@ export class LoginComponent implements AfterViewInit, OnDestroy {
     });
   }
 
-  // =========================
-  // Google GSI
-  // =========================
+  loginAzure() {
+    if (this.loading || this.azureInProgress) return;
+
+    this.loading = true;
+    this.azureInProgress = true;
+    this.errorMsg = '';
+
+    this.auth.loginWithAzure().subscribe({
+      next: (user) => {
+        this.loading = false;
+        this.azureInProgress = false;
+        this.navigateAfterLogin(user);
+      },
+      error: (err: any) => {
+        this.loading = false;
+        this.azureInProgress = false;
+
+        const rawMessage =
+          err?.error?.detail ||
+          err?.error?.message ||
+          err?.message ||
+          'No se pudo iniciar con Microsoft. Intenta de nuevo.';
+
+        if (String(rawMessage).includes('interaction_in_progress')) {
+          this.errorMsg =
+            'Ya hay un inicio de sesión de Microsoft en curso. Espera unos segundos y vuelve a intentarlo.';
+          return;
+        }
+
+        this.errorMsg = rawMessage;
+      },
+    });
+  }
+
   private getClientId(): string {
     return (
       (environment as any).googleClientId ||
@@ -177,8 +216,9 @@ export class LoginComponent implements AfterViewInit, OnDestroy {
 
   private async initGoogle() {
     const clientId = this.getClientId();
+
     if (!clientId) {
-      this.errorMsg = 'Falta GOOGLE_CLIENT_ID en environment.';
+      this.googleReady = false;
       return;
     }
 
@@ -187,13 +227,13 @@ export class LoginComponent implements AfterViewInit, OnDestroy {
     try {
       await this.loadGoogleScript();
     } catch {
-      this.errorMsg = 'No se pudo cargar Google. Revisa internet o bloqueadores (adblock).';
+      this.googleReady = false;
       return;
     }
 
     const google = window.google;
     if (!google?.accounts?.id) {
-      this.errorMsg = 'Google Identity Services no está disponible en este navegador.';
+      this.googleReady = false;
       return;
     }
 
@@ -206,16 +246,14 @@ export class LoginComponent implements AfterViewInit, OnDestroy {
     });
 
     this.googleReady = true;
-
-    // ✅ render cuando el #gsiBtn ya exista
     this.renderGoogleButtonSafe();
   }
 
   private renderGoogleButtonSafe() {
     if (!isPlatformBrowser(this.platformId)) return;
+    if (!this.googleReady) return;
     if (this.gsiRendered) return;
 
-    // si el elemento aún no está, reintenta una vez
     if (!this.gsiBtn?.nativeElement) {
       setTimeout(() => this.renderGoogleButtonSafe(), 0);
       return;
@@ -242,10 +280,12 @@ export class LoginComponent implements AfterViewInit, OnDestroy {
   private loadGoogleScript(): Promise<void> {
     return new Promise((resolve, reject) => {
       const id = 'google-gsi';
+
       if (document.getElementById(id)) {
         resolve();
         return;
       }
+
       const s = document.createElement('script');
       s.id = id;
       s.src = 'https://accounts.google.com/gsi/client';
@@ -258,32 +298,23 @@ export class LoginComponent implements AfterViewInit, OnDestroy {
   }
 
   private onGoogleCredential(resp: any) {
+    if (this.loading) return;
+
     const credential = resp?.credential;
 
     if (!credential) {
-      this.errorMsg = 'No se pudo obtener el token de Google. Intenta nuevamente.';
+      this.errorMsg =
+        'No se pudo obtener el token de Google. Intenta nuevamente.';
       return;
     }
 
     this.loading = true;
     this.errorMsg = '';
 
-    const anyAuth = this.auth as any;
-    const req$ = anyAuth.loginWithGoogle?.(credential);
-
-    if (!req$?.subscribe) {
-      this.loading = false;
-      this.errorMsg =
-        'No encuentro AuthService.loginWithGoogle(credential). Debes implementarlo igual que en Register.';
-      return;
-    }
-
-    req$.subscribe({
-      next: () => {
+    this.auth.loginWithGoogle(credential).subscribe({
+      next: (user) => {
         this.loading = false;
-        const redirect = this.route.snapshot.queryParamMap.get('redirect') ?? '/dashboard';
-        // ✅ más seguro
-        this.router.navigateByUrl(redirect);
+        this.navigateAfterLogin(user);
       },
       error: (err: any) => {
         this.loading = false;

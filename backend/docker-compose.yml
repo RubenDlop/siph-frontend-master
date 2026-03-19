@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   db:
     image: postgres:15
@@ -29,7 +27,14 @@ services:
       JWT_EXPIRATION_MINUTES: 60
       GOOGLE_CLIENT_ID: 1026227617402-hts4hu699cuo0gmh5fg8sh8ncjfdvo76.apps.googleusercontent.com
 
-      # ✅ CORS
+      # Azure / Entra ID
+      AZURE_TENANT_ID: 8091eb44-4181-4c3c-b53d-fd6add70b0d9
+      AZURE_SPA_CLIENT_ID: 628629c9-2b9b-43e7-a9e4-949b5af8a5f4
+      AZURE_API_CLIENT_ID: b6a729ea-ecc2-4014-814c-4c10d21a0e24
+      AZURE_AUTHORITY: https://login.microsoftonline.com/8091eb44-4181-4c3c-b53d-fd6add70b0d9
+      AZURE_API_SCOPE: api://b6a729ea-ecc2-4014-814c-4c10d21a0e24/access_as_user
+
+      # CORS
       CORS_ORIGINS: http://localhost:4200,http://127.0.0.1:4200
 
     ports:
