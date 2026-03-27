@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import Optional, Literal
+from typing import Optional, Literal, Any
 
 from pydantic import BaseModel, Field, ConfigDict, field_validator
 
@@ -59,16 +59,27 @@ class ServiceRequestCreate(BaseModel):
         return str(v).strip()
 
 
+class RequestUserLite(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    first_name: str
+    last_name: str
+    email: str
+    role: str
+    is_active: bool
+
+
 class ServiceRequestOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
     user_id: int
+    assigned_worker_id: Optional[int] = None
 
     category: str
     title: str
     description: str
-
     urgency: str
 
     city: Optional[str] = None
@@ -91,10 +102,65 @@ class ServiceRequestOut(BaseModel):
     contact_pref: Optional[str] = None
 
     status: str
+
+    assigned_at: Optional[datetime] = None
+    accepted_at: Optional[datetime] = None
+    started_at: Optional[datetime] = None
+    completed_at: Optional[datetime] = None
+
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
+    customer: Optional[RequestUserLite] = None
+    assigned_worker: Optional[RequestUserLite] = None
 
-# ✅ /requests/me devuelve TODO (no resumen)
+    client_name: Optional[str] = None
+    client_email: Optional[str] = None
+    assigned_worker_name: Optional[str] = None
+    assigned_worker_email: Optional[str] = None
+
+
 class ServiceRequestListItem(ServiceRequestOut):
     pass
+
+
+class RequestMessageCreate(BaseModel):
+    body: str = Field(..., min_length=1, max_length=2000)
+
+    @field_validator("body", mode="before")
+    @classmethod
+    def strip_body(cls, v):
+        if v is None:
+            return ""
+        return str(v).strip()
+
+
+class RequestMessageOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    request_id: int
+    sender_user_id: int
+    body: str
+    created_at: datetime
+    read_at: Optional[datetime] = None
+
+    sender: Optional[RequestUserLite] = None
+    is_mine: bool = False
+
+
+class RequestEventOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    request_id: int
+    actor_user_id: Optional[int] = None
+    event_type: str
+    title: str
+    message: Optional[str] = None
+    status_from: Optional[str] = None
+    status_to: Optional[str] = None
+    meta: dict[str, Any] = Field(default_factory=dict)
+    created_at: datetime
+
+    actor: Optional[RequestUserLite] = None

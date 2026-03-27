@@ -47,6 +47,16 @@
         </a>
 
         <a
+          class="link link--worker"
+          *ngIf="isAuth && canSeeWorkerRequests"
+          routerLink="/worker/requests"
+          routerLinkActive="isActive"
+          (click)="closeMenu()"
+        >
+          Solicitudes de trabajo
+        </a>
+
+        <a
           class="link"
           *ngIf="isAuth && (isUser || isAdmin)"
           routerLink="/reviews"
@@ -131,6 +141,16 @@
 
             <a
               class="menuItem"
+              *ngIf="isAuth && canSeeWorkerRequests"
+              routerLink="/worker/requests"
+              (click)="closeMenu()"
+              role="menuitem"
+            >
+              Solicitudes de trabajo
+            </a>
+
+            <a
+              class="menuItem"
               *ngIf="isAuth && isUser"
               routerLink="/work/apply"
               (click)="closeMenu()"
@@ -151,7 +171,12 @@
 
             <div class="menuSep" aria-hidden="true"></div>
 
-            <button type="button" class="menuItem menuItem--danger" (click)="logout()" role="menuitem">
+            <button
+              type="button"
+              class="menuItem menuItem--danger"
+              (click)="logout()"
+              role="menuitem"
+            >
               Cerrar sesión
             </button>
           </div>
@@ -181,21 +206,57 @@
     <a class="mLink" routerLink="/workers" (click)="closeMenu()">Expertos</a>
     <a class="mLink" *ngIf="isAuth" routerLink="/dashboard" (click)="closeMenu()">Dashboard</a>
 
-    <a class="mLink" *ngIf="isAuth && (isUser || isAdmin)" routerLink="/requests/new" (click)="closeMenu()">
+    <a
+      class="mLink"
+      *ngIf="isAuth && (isUser || isAdmin)"
+      routerLink="/requests/new"
+      (click)="closeMenu()"
+    >
       Solicitar
     </a>
-    <a class="mLink" *ngIf="isAuth && (isUser || isAdmin)" routerLink="/my-requests" (click)="closeMenu()">
+
+    <a
+      class="mLink"
+      *ngIf="isAuth && (isUser || isAdmin)"
+      routerLink="/my-requests"
+      (click)="closeMenu()"
+    >
       Mis solicitudes
     </a>
-    <a class="mLink" *ngIf="isAuth && (isUser || isAdmin)" routerLink="/reviews" (click)="closeMenu()">
+
+    <a
+      class="mLink mLink--worker"
+      *ngIf="isAuth && canSeeWorkerRequests"
+      routerLink="/worker/requests"
+      (click)="closeMenu()"
+    >
+      Solicitudes de trabajo
+    </a>
+
+    <a
+      class="mLink"
+      *ngIf="isAuth && (isUser || isAdmin)"
+      routerLink="/reviews"
+      (click)="closeMenu()"
+    >
       Reseñas
     </a>
 
-    <a class="mLink mLink--accent" *ngIf="isAuth && isUser" routerLink="/work/apply" (click)="closeMenu()">
+    <a
+      class="mLink mLink--accent"
+      *ngIf="isAuth && isUser"
+      routerLink="/work/apply"
+      (click)="closeMenu()"
+    >
       Trabajar (Ser técnico)
     </a>
 
-    <a class="mLink mLink--admin" *ngIf="isAuth && isAdmin" routerLink="/admin/worker-applications" (click)="closeMenu()">
+    <a
+      class="mLink mLink--admin"
+      *ngIf="isAuth && isAdmin"
+      routerLink="/admin/worker-applications"
+      (click)="closeMenu()"
+    >
       Admin • Solicitudes
     </a>
 

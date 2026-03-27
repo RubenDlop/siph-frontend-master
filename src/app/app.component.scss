@@ -1,12 +1,15 @@
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
 .app-shell {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #0b1220;
-  color: rgba(255, 255, 255, 0.92);
 }
 
 .app-main {
-  flex: 1;
-  display: block;
+  flex: 1 1 auto;
+  min-height: 0;
 }

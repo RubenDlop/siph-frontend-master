@@ -1,15 +1,11 @@
 <main class="mr-page relative min-h-[calc(100vh-70px)] overflow-hidden">
-  <!-- Premium background -->
   <div aria-hidden="true" class="pointer-events-none absolute inset-0">
-    <!-- Base wash -->
     <div class="absolute inset-0 bg-gradient-to-b from-slate-50 via-indigo-50/40 to-slate-50"></div>
 
-    <!-- Soft blobs -->
     <div class="absolute -top-28 left-[-14%] h-[560px] w-[560px] rounded-full bg-indigo-500/15 blur-3xl"></div>
     <div class="absolute -top-32 right-[-12%] h-[620px] w-[620px] rounded-full bg-violet-500/10 blur-3xl"></div>
     <div class="absolute bottom-[-20%] left-[10%] h-[560px] w-[560px] rounded-full bg-sky-500/10 blur-3xl"></div>
 
-    <!-- Grid -->
     <div
       class="absolute inset-0 opacity-[0.12]"
       style="
@@ -19,14 +15,12 @@
       "
     ></div>
 
-    <!-- Subtle vignette -->
     <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(99,102,241,0.14),transparent_55%)]"></div>
     <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,rgba(14,165,233,0.10),transparent_60%)]"></div>
   </div>
 
-  <section class="relative mx-auto w-full max-w-6xl px-4 py-10 sm:py-12">
-    <!-- Top header -->
-    <header class="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+  <section class="relative mx-auto w-full max-w-7xl px-4 py-10 sm:py-12">
+    <header class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
       <div class="max-w-3xl">
         <div
           class="inline-flex items-center gap-2 rounded-full border border-slate-200/70 bg-white/70 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur"
@@ -34,7 +28,7 @@
           <span class="h-2 w-2 rounded-full bg-indigo-600"></span>
           Solicitudes · SIPH
           <span class="mx-1 h-4 w-px bg-slate-200"></span>
-          <span class="text-slate-500">Historial</span>
+          <span class="text-slate-500">Centro de control</span>
         </div>
 
         <h1 class="mt-3 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
@@ -42,22 +36,21 @@
         </h1>
 
         <p class="mt-2 text-sm leading-relaxed text-slate-600">
-          Visualiza y administra tus solicitudes con información completa: ubicación, contacto, presupuesto, horarios y estado.
+          Aquí ves tus solicitudes, cambios de estado, asignación del técnico, historial de eventos
+          y acciones para cancelar la solicitud o cancelar la aceptación cuando el servicio aún no ha iniciado.
         </p>
 
-        <!-- subtle underline -->
         <div class="mt-4 h-px w-full max-w-xl bg-gradient-to-r from-indigo-200 via-slate-200 to-transparent"></div>
       </div>
 
-      <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+      <div class="flex flex-wrap gap-2">
         <button
           type="button"
-          (click)="reload()"
+          (click)="reload(true, false)"
           [disabled]="loading"
           class="group inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm backdrop-blur transition hover:bg-white hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500/25 disabled:cursor-not-allowed disabled:opacity-60 active:scale-[0.99]"
           aria-label="Actualizar solicitudes"
         >
-          <!-- spinner / refresh -->
           <span class="relative grid place-items-center">
             <svg
               *ngIf="!loading"
@@ -89,10 +82,17 @@
 
           {{ loading ? 'Actualizando…' : 'Actualizar' }}
         </button>
+
+        <div
+          class="inline-flex items-center gap-2 rounded-2xl border px-4 py-2.5 text-sm font-semibold"
+          [ngClass]="silentRefreshing ? 'border-sky-200 bg-sky-50 text-sky-800' : 'border-slate-200 bg-white text-slate-700'"
+        >
+          <span class="h-2.5 w-2.5 rounded-full" [ngClass]="silentRefreshing ? 'bg-sky-500' : 'bg-emerald-500'"></span>
+          {{ silentRefreshing ? 'Sincronizando…' : 'Auto-sync activo' }}
+        </div>
       </div>
     </header>
 
-    <!-- Error-->
     <div
       *ngIf="errorMsg"
       class="mt-6 flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50/90 px-4 py-3 text-sm text-rose-900 shadow-sm backdrop-blur"
@@ -102,8 +102,11 @@
         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path d="M12 9v5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
           <path d="M12 17h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-          <path d="M10.3 4.3l-7.6 13.2A2 2 0 004.4 20h15.2a2 2 0 001.7-2.9L13.7 4.3a2 2 0 00-3.4 0z"
-            stroke="currentColor" stroke-width="2" stroke-linejoin="round"
+          <path
+            d="M10.3 4.3l-7.6 13.2A2 2 0 004.4 20h15.2a2 2 0 001.7-2.9L13.7 4.3a2 2 0 00-3.4 0z"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linejoin="round"
           />
         </svg>
       </div>
@@ -122,10 +125,67 @@
       </button>
     </div>
 
+    <section
+      *ngIf="notifications.length"
+      class="mt-6 rounded-3xl border border-slate-200 bg-white/80 p-5 shadow-[0_18px_60px_rgba(2,6,23,0.10)] backdrop-blur"
+    >
+      <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h2 class="text-lg font-semibold text-slate-900">
+            Notificaciones
+            <span
+              class="ml-2 inline-flex rounded-full bg-indigo-100 px-2.5 py-1 text-xs font-bold text-indigo-800"
+            >
+              {{ unreadNotificationsCount }} sin leer
+            </span>
+          </h2>
+          <p class="mt-1 text-sm text-slate-600">
+            Cambios detectados automáticamente en tus solicitudes.
+          </p>
+        </div>
 
-    <!-- KPI Row -->
+        <button
+          type="button"
+          (click)="markAllNotificationsRead()"
+          class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50"
+        >
+          Marcar todo como leído
+        </button>
+      </div>
+
+      <div class="thin-scroll mt-4 max-h-[300px] space-y-3 overflow-auto pr-1">
+        <article
+          *ngFor="let n of notifications; trackBy: trackByNotification"
+          class="flex items-start justify-between gap-3 rounded-2xl border px-4 py-3 shadow-sm"
+          [ngClass]="notificationClass(n.tone)"
+        >
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-2">
+              <h3 class="text-sm font-bold">{{ n.title }}</h3>
+              <span
+                *ngIf="!n.read"
+                class="inline-flex rounded-full bg-white/80 px-2 py-0.5 text-[10px] font-bold uppercase"
+              >
+                Nuevo
+              </span>
+            </div>
+
+            <p class="mt-1 text-sm opacity-90">{{ n.message }}</p>
+            <p class="mt-2 text-xs opacity-70">{{ fmtDate(n.createdAt.toString()) }}</p>
+          </div>
+
+          <button
+            type="button"
+            (click)="dismissNotification(n.id)"
+            class="rounded-xl px-2 py-1 text-xs font-semibold hover:bg-white/60"
+          >
+            Cerrar
+          </button>
+        </article>
+      </div>
+    </section>
+
     <div class="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      <!-- Total -->
       <div class="relative overflow-hidden rounded-3xl border border-slate-200 bg-white/75 p-4 shadow-[0_16px_50px_rgba(2,6,23,0.08)] backdrop-blur">
         <div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-slate-200 via-indigo-200 to-violet-200"></div>
         <div class="flex items-center justify-between">
@@ -136,7 +196,6 @@
         <div class="mt-1 text-xs text-slate-600">Solicitudes registradas</div>
       </div>
 
-      <!-- Activas -->
       <div class="relative overflow-hidden rounded-3xl border border-slate-200 bg-white/75 p-4 shadow-[0_16px_50px_rgba(2,6,23,0.08)] backdrop-blur">
         <div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-indigo-200 via-sky-200 to-transparent"></div>
         <div class="flex items-center justify-between">
@@ -147,7 +206,6 @@
         <div class="mt-1 text-xs text-slate-600">No finalizadas / no canceladas</div>
       </div>
 
-      <!-- Finalizadas -->
       <div class="relative overflow-hidden rounded-3xl border border-slate-200 bg-white/75 p-4 shadow-[0_16px_50px_rgba(2,6,23,0.08)] backdrop-blur">
         <div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-200 via-slate-200 to-transparent"></div>
         <div class="flex items-center justify-between">
@@ -158,7 +216,6 @@
         <div class="mt-1 text-xs text-slate-600">Trabajo completado</div>
       </div>
 
-      <!-- Canceladas -->
       <div class="relative overflow-hidden rounded-3xl border border-slate-200 bg-white/75 p-4 shadow-[0_16px_50px_rgba(2,6,23,0.08)] backdrop-blur">
         <div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-rose-200 via-slate-200 to-transparent"></div>
         <div class="flex items-center justify-between">
@@ -170,159 +227,143 @@
       </div>
     </div>
 
-    <!-- Main card -->
-    <div class="mt-6 rounded-3xl border border-slate-200 bg-white/80 shadow-[0_18px_60px_rgba(2,6,23,0.10)] backdrop-blur">
-      <!-- Filters -->
+    <section class="mt-6 rounded-3xl border border-slate-200 bg-white/80 shadow-[0_18px_60px_rgba(2,6,23,0.10)] backdrop-blur">
       <div class="border-b border-slate-200/70 px-5 py-5 sm:px-6">
-        <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div class="grid w-full gap-3 sm:grid-cols-2 lg:max-w-4xl">
-            <!-- Search -->
-            <div>
-              <label class="text-xs font-semibold text-slate-600">Buscar</label>
-              <div
-                class="mt-2 flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2.5 ring-indigo-500/20 transition focus-within:ring-4"
-              >
-                <svg class="h-4 w-4 text-slate-400" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                  <path d="M11 19a8 8 0 100-16 8 8 0 000 16z" stroke="currentColor" stroke-width="2"/>
-                </svg>
+        <div class="grid gap-3 lg:grid-cols-[1.2fr_0.9fr_auto]">
+          <div>
+            <label class="text-xs font-semibold text-slate-600">Buscar</label>
+            <div class="mt-2 flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2.5">
+              <svg class="h-4 w-4 text-slate-400" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path d="M11 19a8 8 0 100-16 8 8 0 000 16z" stroke="currentColor" stroke-width="2"/>
+              </svg>
 
-                <input
-                  [(ngModel)]="q"
-                  (ngModelChange)="applyFilters()"
-                  class="w-full bg-transparent text-sm text-slate-900 placeholder:text-slate-400 outline-none"
-                  placeholder="Título, categoría, descripción, ciudad, barrio, contacto…"
-                  autocomplete="off"
-                />
-
-                <button
-                  *ngIf="q"
-                  type="button"
-                  (click)="q=''; applyFilters()"
-                  class="rounded-xl px-2 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500/20"
-                >
-                  Limpiar
-                </button>
-              </div>
-            </div>
-
-            <!-- Status -->
-            <div>
-              <label class="text-xs font-semibold text-slate-600">Estado</label>
-
-              <!-- ✅ FIX: ahora SÍ se ve en XS/SM/MD -->
-              <select
-                class="mt-2 block w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none ring-indigo-500/20 focus:ring-4 lg:hidden"
-                [(ngModel)]="status"
+              <input
+                [(ngModel)]="q"
                 (ngModelChange)="applyFilters()"
-                aria-label="Filtrar por estado"
+                class="w-full bg-transparent text-sm text-slate-900 placeholder:text-slate-400 outline-none"
+                placeholder="Título, categoría, ciudad, técnico, contacto…"
+                autocomplete="off"
+              />
+
+              <button
+                *ngIf="q"
+                type="button"
+                (click)="q=''; applyFilters()"
+                class="rounded-xl px-2 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500/20"
               >
-                <option value="ALL">Todos</option>
-                <option value="CREATED">Creada</option>
-                <option value="MATCHING">Buscando</option>
-                <option value="ASSIGNED">Asignada</option>
-                <option value="IN_PROGRESS">En progreso</option>
-                <option value="DONE">Finalizada</option>
-                <option value="CANCELED">Cancelada</option>
-              </select>
-
-              <!-- Desktop chips -->
-              <div class="mt-2 hidden items-center gap-2 overflow-x-auto pb-1 lg:flex">
-                <button
-                  type="button"
-                  (click)="setStatus('ALL')"
-                  class="shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold shadow-sm transition active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500/20"
-                  [ngClass]="status==='ALL'
-                    ? 'border-slate-300 bg-slate-900 text-white'
-                    : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'"
-                >
-                  Todos
-                </button>
-
-                <button
-                  type="button"
-                  (click)="setStatus('CREATED')"
-                  class="shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold shadow-sm transition active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500/20"
-                  [ngClass]="status==='CREATED'
-                    ? 'border-slate-300 bg-slate-900 text-white'
-                    : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'"
-                >
-                  Creada
-                </button>
-
-                <button
-                  type="button"
-                  (click)="setStatus('MATCHING')"
-                  class="shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold shadow-sm transition active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500/20"
-                  [ngClass]="status==='MATCHING'
-                    ? 'border-amber-300 bg-amber-50 text-amber-800'
-                    : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'"
-                >
-                  Buscando
-                </button>
-
-                <button
-                  type="button"
-                  (click)="setStatus('ASSIGNED')"
-                  class="shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold shadow-sm transition active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500/20"
-                  [ngClass]="status==='ASSIGNED'
-                    ? 'border-indigo-300 bg-indigo-50 text-indigo-800'
-                    : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'"
-                >
-                  Asignada
-                </button>
-
-                <button
-                  type="button"
-                  (click)="setStatus('IN_PROGRESS')"
-                  class="shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold shadow-sm transition active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500/20"
-                  [ngClass]="status==='IN_PROGRESS'
-                    ? 'border-sky-300 bg-sky-50 text-sky-800'
-                    : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'"
-                >
-                  En progreso
-                </button>
-
-                <button
-                  type="button"
-                  (click)="setStatus('DONE')"
-                  class="shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold shadow-sm transition active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500/20"
-                  [ngClass]="status==='DONE'
-                    ? 'border-emerald-300 bg-emerald-50 text-emerald-800'
-                    : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'"
-                >
-                  Finalizada
-                </button>
-
-                <button
-                  type="button"
-                  (click)="setStatus('CANCELED')"
-                  class="shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold shadow-sm transition active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500/20"
-                  [ngClass]="status==='CANCELED'
-                    ? 'border-rose-300 bg-rose-50 text-rose-800'
-                    : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'"
-                >
-                  Cancelada
-                </button>
-              </div>
+                Limpiar
+              </button>
             </div>
           </div>
 
-          <!-- Counters -->
-          <div class="flex flex-wrap items-center gap-2">
-            <span class="rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-semibold text-slate-700 shadow-sm">
-              Total: <span class="text-slate-900">{{ items.length }}</span>
-            </span>
-            <span class="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-[11px] font-semibold text-indigo-700">
-              Mostrando: <span class="text-indigo-900">{{ filtered.length }}</span>
-            </span>
+          <div>
+            <label class="text-xs font-semibold text-slate-600">Estado</label>
+
+            <select
+              class="mt-2 block w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none ring-indigo-500/20 focus:ring-4 lg:hidden"
+              [(ngModel)]="status"
+              (ngModelChange)="applyFilters()"
+              aria-label="Filtrar por estado"
+            >
+              <option value="ALL">Todos</option>
+              <option value="CREATED">Creada</option>
+              <option value="MATCHING">Buscando</option>
+              <option value="ASSIGNED">Asignada</option>
+              <option value="IN_PROGRESS">En progreso</option>
+              <option value="DONE">Finalizada</option>
+              <option value="CANCELED">Cancelada</option>
+            </select>
+
+            <div class="mt-2 hidden items-center gap-2 overflow-x-auto pb-1 lg:flex">
+              <button
+                type="button"
+                (click)="setStatus('ALL')"
+                class="shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold shadow-sm transition active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500/20"
+                [ngClass]="status==='ALL'
+                  ? 'border-slate-300 bg-slate-900 text-white'
+                  : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'"
+              >
+                Todos
+              </button>
+
+              <button
+                type="button"
+                (click)="setStatus('CREATED')"
+                class="shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold shadow-sm transition active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500/20"
+                [ngClass]="status==='CREATED'
+                  ? 'border-slate-300 bg-slate-900 text-white'
+                  : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'"
+              >
+                Creada
+              </button>
+
+              <button
+                type="button"
+                (click)="setStatus('MATCHING')"
+                class="shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold shadow-sm transition active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500/20"
+                [ngClass]="status==='MATCHING'
+                  ? 'border-amber-300 bg-amber-50 text-amber-800'
+                  : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'"
+              >
+                Buscando
+              </button>
+
+              <button
+                type="button"
+                (click)="setStatus('ASSIGNED')"
+                class="shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold shadow-sm transition active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500/20"
+                [ngClass]="status==='ASSIGNED'
+                  ? 'border-indigo-300 bg-indigo-50 text-indigo-800'
+                  : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'"
+              >
+                Asignada
+              </button>
+
+              <button
+                type="button"
+                (click)="setStatus('IN_PROGRESS')"
+                class="shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold shadow-sm transition active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500/20"
+                [ngClass]="status==='IN_PROGRESS'
+                  ? 'border-sky-300 bg-sky-50 text-sky-800'
+                  : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'"
+              >
+                En progreso
+              </button>
+
+              <button
+                type="button"
+                (click)="setStatus('DONE')"
+                class="shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold shadow-sm transition active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500/20"
+                [ngClass]="status==='DONE'
+                  ? 'border-emerald-300 bg-emerald-50 text-emerald-800'
+                  : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'"
+              >
+                Finalizada
+              </button>
+
+              <button
+                type="button"
+                (click)="setStatus('CANCELED')"
+                class="shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold shadow-sm transition active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500/20"
+                [ngClass]="status==='CANCELED'
+                  ? 'border-rose-300 bg-rose-50 text-rose-800'
+                  : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'"
+              >
+                Cancelada
+              </button>
+            </div>
+          </div>
+
+          <div class="flex items-end">
+            <div class="inline-flex rounded-2xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm font-semibold text-indigo-800">
+              Mostrando {{ filtered.length }}
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Body -->
       <div class="px-5 py-6 sm:px-6">
-        <!-- Loading -->
         <div *ngIf="loading" class="space-y-3" aria-live="polite">
           <div class="h-10 w-full animate-pulse rounded-2xl border border-slate-200 bg-slate-50"></div>
           <div class="h-10 w-full animate-pulse rounded-2xl border border-slate-200 bg-slate-50"></div>
@@ -330,285 +371,291 @@
           <div class="h-10 w-full animate-pulse rounded-2xl border border-slate-200 bg-slate-50"></div>
         </div>
 
-        <!-- Empty -->
         <div *ngIf="!loading && filtered.length === 0" class="rounded-2xl border border-slate-200 bg-white px-4 py-10 text-center">
           <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-700">
             <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M4 7h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
               <path d="M6 7v14h12V7" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
               <path d="M9 11h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              <path d="M9 15h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              <path d="M9 3h6v4H9V3z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
             </svg>
           </div>
-          <div class="mt-3 text-sm font-semibold text-slate-900">No tienes solicitudes para mostrar</div>
-          <div class="mt-1 text-xs text-slate-600">Prueba ajustando el estado o el texto de búsqueda.</div>
+          <div class="mt-4 text-sm font-semibold text-slate-900">No tienes solicitudes para mostrar</div>
+          <div class="mt-1 text-xs text-slate-600">Prueba ajustando los filtros.</div>
         </div>
 
-        <!-- Desktop table -->
-        <div *ngIf="!loading && filtered.length > 0" class="hidden lg:block">
-          <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-            <div class="mr-scroll max-h-[72vh] overflow-auto">
-              <table class="w-full min-w-[1120px] border-collapse">
-                <thead class="sticky top-0 z-10 bg-slate-50">
-                  <tr class="border-b border-slate-200">
-                    <th class="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-600">Solicitud</th>
-                    <th class="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-600">Categoría</th>
-                    <th class="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-600">Urgencia</th>
-                    <th class="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-600">Ubicación</th>
-                    <th class="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-600">Contacto</th>
-                    <th class="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-600">Presupuesto</th>
-                    <th class="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-600">Estado</th>
-                    <th class="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-600">Creada</th>
-                    <th class="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-600">Acción</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  <ng-container *ngFor="let r of filtered; trackBy: trackById">
-                    <tr class="group border-b border-slate-100 hover:bg-slate-50/60">
-                      <td class="px-4 py-4 align-top">
-                        <div class="flex items-start gap-3">
-                          <div class="mt-0.5 h-9 w-9 shrink-0 rounded-2xl border border-slate-200 bg-gradient-to-b from-slate-50 to-white"></div>
-                          <div class="min-w-0">
-                            <div class="truncate font-semibold text-slate-900">
-                              {{ r.title }}
-                            </div>
-                            <div class="mt-1 line-clamp-2 text-xs leading-relaxed text-slate-600">
-                              {{ r.description || '—' }}
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-
-                      <td class="px-4 py-4 align-top">
-                        <span class="inline-flex rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
-                          {{ r.category || '—' }}
-                        </span>
-                      </td>
-
-                      <td class="px-4 py-4 align-top">
-                        <span
-                          class="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold"
-                          [ngClass]="urgencyClass(r.urgency)"
-                        >
-                          <span class="h-1.5 w-1.5 rounded-full"
-                            [ngClass]="r.urgency === 'URGENT' ? 'bg-rose-600' : 'bg-slate-400'"
-                            aria-hidden="true"
-                          ></span>
-                          {{ r.urgency === 'URGENT' ? 'Urgente' : 'Normal' }}
-                        </span>
-                      </td>
-
-                      <td class="px-4 py-4 align-top">
-                        <div class="font-semibold text-slate-900">
-                          {{ r.city || '—' }}<span *ngIf="r.neighborhood"> · {{ r.neighborhood }}</span>
-                        </div>
-                        <div class="mt-1 text-xs text-slate-600">{{ r.address || '—' }}</div>
-                      </td>
-
-                      <td class="px-4 py-4 align-top">
-                        <div class="font-semibold text-slate-900">{{ r.contact_pref || '—' }}</div>
-                        <div class="mt-1 text-xs text-slate-600">
-                          {{ r.contact_name || '—' }}<span *ngIf="r.contact_phone"> · {{ r.contact_phone }}</span>
-                        </div>
-                      </td>
-
-                      <td class="px-4 py-4 align-top">
-                        <div class="font-semibold text-slate-900">{{ fmtMoneyRange(r.budget_min, r.budget_max) }}</div>
-                        <div class="mt-1 text-xs text-slate-600">
-                          {{ r.time_window || '—' }}<span *ngIf="r.schedule_date"> · {{ r.schedule_date }}</span>
-                        </div>
-                      </td>
-
-                      <td class="px-4 py-4 align-top">
-                        <span
-                          class="inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold"
-                          [ngClass]="statusClass(r.status)"
-                        >
-                          {{ statusLabel(r.status) }}
-                        </span>
-                      </td>
-
-                      <td class="px-4 py-4 align-top text-xs text-slate-600">{{ fmtDate(r.created_at || null) }}</td>
-
-                      <td class="px-4 py-4 align-top text-right">
-                        <div class="inline-flex gap-2">
-                          <button
-                            type="button"
-                            (click)="toggle(r.id)"
-                            class="group/btn rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-900 shadow-sm transition hover:bg-slate-50 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500/20"
-                          >
-                            <span class="inline-flex items-center gap-2">
-                              <svg class="h-4 w-4 text-slate-500" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" stroke="currentColor" stroke-width="2"/>
-                                <path d="M12 15a3 3 0 100-6 3 3 0 000 6z" stroke="currentColor" stroke-width="2"/>
-                              </svg>
-                              {{ expandedId === r.id ? 'Ocultar' : 'Detalle' }}
-                            </span>
-                          </button>
-
-                          <button
-                            type="button"
-                            (click)="cancel(r)"
-                            [disabled]="!canCancel(r)"
-                            class="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-900 shadow-sm transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-rose-500/20"
-                          >
-                            Cancelar
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-
-                    <tr *ngIf="expandedId === r.id" class="border-b border-slate-100 bg-slate-50/40">
-                      <td colspan="9" class="px-4 py-4">
-                        <div class="rounded-2xl border border-slate-200 bg-white p-4">
-                          <div class="grid gap-4 sm:grid-cols-2">
-                            <div>
-                              <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Descripción</div>
-                              <div class="mt-1 text-sm text-slate-900">{{ r.description || '—' }}</div>
-                            </div>
-
-                            <div>
-                              <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Referencia</div>
-                              <div class="mt-1 text-sm text-slate-900">{{ r.address_ref || '—' }}</div>
-                            </div>
-
-                            <div>
-                              <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Coordenadas</div>
-                              <div class="mt-1 text-sm text-slate-900">
-                                Lat: <b>{{ r.lat ?? '—' }}</b> · Lng: <b>{{ r.lng ?? '—' }}</b>
-                                <span *ngIf="r.accuracy_m"> · Precisión: <b>{{ r.accuracy_m }} m</b></span>
-                              </div>
-                            </div>
-
-                            <div>
-                              <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Usuario</div>
-                              <div class="mt-1 text-sm text-slate-900">user_id: <b>{{ r.user_id }}</b></div>
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                  </ng-container>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <!-- Mobile / Tablet cards -->
-        <div *ngIf="!loading && filtered.length > 0" class="grid gap-4 lg:hidden">
-          <ng-container *ngFor="let r of filtered; trackBy: trackById">
-            <div class="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-              <div class="flex items-start justify-between gap-3">
-                <div class="min-w-0">
-                  <div class="truncate text-sm font-semibold text-slate-900">{{ r.title }}</div>
-                  <div class="mt-1 line-clamp-2 text-xs leading-relaxed text-slate-600">
-                    {{ r.description || '—' }}
-                  </div>
-                </div>
-
-                <span
-                  class="shrink-0 inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold"
-                  [ngClass]="statusClass(r.status)"
-                >
-                  {{ statusLabel(r.status) }}
-                </span>
-              </div>
-
-              <div class="mt-3 grid gap-2 text-xs text-slate-700">
+        <div *ngIf="!loading && filtered.length > 0" class="space-y-4">
+          <article
+            *ngFor="let r of filtered; trackBy: trackById"
+            class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm"
+          >
+            <div class="grid gap-4 px-5 py-5 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,0.9fr)_auto] lg:items-center">
+              <div class="min-w-0">
                 <div class="flex flex-wrap items-center gap-2">
-                  <span class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 font-semibold text-slate-700">
-                    {{ r.category || '—' }}
+                  <span class="inline-flex rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700">
+                    {{ r.category }}
                   </span>
 
                   <span
-                    class="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 font-semibold"
+                    class="inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold"
+                    [ngClass]="statusClass(r.status)"
+                  >
+                    {{ statusLabel(r.status) }}
+                  </span>
+
+                  <span
+                    class="inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold"
                     [ngClass]="urgencyClass(r.urgency)"
                   >
-                    <span class="h-1.5 w-1.5 rounded-full"
-                      [ngClass]="r.urgency === 'URGENT' ? 'bg-rose-600' : 'bg-slate-400'"
-                      aria-hidden="true"
-                    ></span>
                     {{ r.urgency === 'URGENT' ? 'Urgente' : 'Normal' }}
                   </span>
-
-                  <span class="ml-auto rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-semibold text-slate-600">
-                    {{ fmtDate(r.created_at || null) }}
-                  </span>
                 </div>
 
-                <div class="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2">
-                  <div class="font-semibold text-slate-900">
-                    {{ r.city || '—' }}<span *ngIf="r.neighborhood"> · {{ r.neighborhood }}</span>
-                  </div>
-                  <div class="mt-0.5 text-slate-600">{{ r.address || '—' }}</div>
-                </div>
+                <h2 class="mt-3 text-lg font-semibold text-slate-900">
+                  {{ r.title }}
+                </h2>
 
-                <div class="grid gap-2 sm:grid-cols-2">
-                  <div class="rounded-2xl border border-slate-200 bg-white px-3 py-2">
-                    <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Contacto</div>
-                    <div class="mt-1 font-semibold text-slate-900">{{ r.contact_pref || '—' }}</div>
-                    <div class="mt-0.5 text-slate-600">
-                      {{ r.contact_name || '—' }}<span *ngIf="r.contact_phone"> · {{ r.contact_phone }}</span>
-                    </div>
-                  </div>
+                <p class="mt-1 line-clamp-2 text-sm text-slate-600">
+                  {{ r.description }}
+                </p>
 
-                  <div class="rounded-2xl border border-slate-200 bg-white px-3 py-2">
-                    <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Presupuesto</div>
-                    <div class="mt-1 font-semibold text-slate-900">{{ fmtMoneyRange(r.budget_min, r.budget_max) }}</div>
-                    <div class="mt-0.5 text-slate-600">
-                      {{ r.time_window || '—' }}<span *ngIf="r.schedule_date"> · {{ r.schedule_date }}</span>
-                    </div>
-                  </div>
+                <div class="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-600">
+                  <span>{{ r.city || 'Sin ciudad' }}</span>
+                  <span>{{ r.neighborhood || 'Sin barrio' }}</span>
+                  <span>{{ fmtMoneyRange(r.budget_min, r.budget_max) }}</span>
                 </div>
               </div>
 
-              <div class="mt-4 flex flex-wrap gap-2">
+              <div class="min-w-0 rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">Asignación</div>
+                <div class="mt-2 text-sm font-semibold text-slate-900">
+                  {{ r.assigned_worker_name || 'Sin técnico asignado' }}
+                </div>
+                <div class="mt-1 text-xs text-slate-600">
+                  {{ r.assigned_worker_email || 'Aún en espera de aceptación' }}
+                </div>
+
+                <div class="mt-3 text-xs text-slate-600">
+                  Actualizada: {{ fmtDate(r.updated_at || r.created_at || null) }}
+                </div>
+              </div>
+
+              <div class="flex flex-wrap gap-2 lg:flex-col lg:items-stretch">
                 <button
                   type="button"
                   (click)="toggle(r.id)"
-                  class="flex-1 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-900 shadow-sm transition hover:bg-slate-50 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500/20"
+                  class="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50"
                 >
                   {{ expandedId === r.id ? 'Ocultar detalle' : 'Ver detalle' }}
                 </button>
 
                 <button
+                  *ngIf="canCancelAcceptance(r)"
+                  type="button"
+                  (click)="cancelAcceptance(r)"
+                  class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm font-semibold text-amber-900 shadow-sm hover:bg-amber-100"
+                >
+                  Cancelar aceptación
+                </button>
+
+                <button
+                  *ngIf="canCancel(r)"
                   type="button"
                   (click)="cancel(r)"
-                  [disabled]="!canCancel(r)"
-                  class="flex-1 rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-900 shadow-sm transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-rose-500/20"
+                  class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-900 shadow-sm hover:bg-rose-100"
                 >
-                  Cancelar
+                  Cancelar solicitud
                 </button>
               </div>
+            </div>
 
-              <div *ngIf="expandedId === r.id" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-3">
-                <div class="grid gap-3 text-sm">
-                  <div>
-                    <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Referencia</div>
-                    <div class="mt-1 text-slate-900">{{ r.address_ref || '—' }}</div>
-                  </div>
+            <div *ngIf="expandedId === r.id" class="border-t border-slate-200 bg-slate-50/50 px-5 py-5">
+              <div class="grid gap-5 xl:grid-cols-[1.15fr_0.85fr]">
+                <section class="rounded-3xl border border-slate-200 bg-white p-5">
+                  <h3 class="text-base font-semibold text-slate-900">Detalle completo</h3>
 
-                  <div>
-                    <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Coordenadas</div>
-                    <div class="mt-1 text-slate-900">
-                      Lat: <b>{{ r.lat ?? '—' }}</b> · Lng: <b>{{ r.lng ?? '—' }}</b>
-                      <span *ngIf="r.accuracy_m"> · Precisión: <b>{{ r.accuracy_m }} m</b></span>
+                  <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">Ubicación</div>
+                      <div class="mt-1 text-sm text-slate-900">
+                        {{ r.city || '—' }}<span *ngIf="r.neighborhood"> · {{ r.neighborhood }}</span>
+                      </div>
+                      <div class="mt-1 text-xs text-slate-600">{{ r.address || '—' }}</div>
+                      <div class="mt-1 text-xs text-slate-600">{{ r.address_ref || '—' }}</div>
+                    </div>
+
+                    <div>
+                      <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">Contacto</div>
+                      <div class="mt-1 text-sm text-slate-900">{{ r.contact_name || '—' }}</div>
+                      <div class="mt-1 text-xs text-slate-600">{{ r.contact_phone || '—' }}</div>
+                      <div class="mt-1 text-xs text-slate-600">{{ r.contact_pref || '—' }}</div>
+                    </div>
+
+                    <div>
+                      <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">Agenda</div>
+                      <div class="mt-1 text-sm text-slate-900">{{ r.schedule_date || '—' }}</div>
+                      <div class="mt-1 text-xs text-slate-600">{{ r.time_window || '—' }}</div>
+                    </div>
+
+                    <div>
+                      <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">Presupuesto</div>
+                      <div class="mt-1 text-sm text-slate-900">{{ fmtMoneyRange(r.budget_min, r.budget_max) }}</div>
+                    </div>
+
+                    <div>
+                      <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">Creada</div>
+                      <div class="mt-1 text-sm text-slate-900">{{ fmtDate(r.created_at || null) }}</div>
+                    </div>
+
+                    <div>
+                      <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">Última actualización</div>
+                      <div class="mt-1 text-sm text-slate-900">{{ fmtDate(r.updated_at || null) }}</div>
                     </div>
                   </div>
 
-                  <div>
-                    <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Usuario</div>
-                    <div class="mt-1 text-slate-900">user_id: <b>{{ r.user_id }}</b></div>
+                  <div class="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                    <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">Descripción</div>
+                    <p class="mt-2 text-sm leading-6 text-slate-700">
+                      {{ r.description }}
+                    </p>
                   </div>
-                </div>
+                </section>
+
+                <section class="rounded-3xl border border-slate-200 bg-white p-5">
+                  <div class="flex items-center justify-between gap-3">
+                    <h3 class="text-base font-semibold text-slate-900">Timeline de cambios</h3>
+                    <button
+                      type="button"
+                      (click)="loadEvents(r.id)"
+                      class="rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-900 shadow-sm hover:bg-slate-50"
+                    >
+                      Recargar
+                    </button>
+                  </div>
+
+                  <div *ngIf="loadingEvents" class="mt-4 space-y-3">
+                    <div class="h-16 animate-pulse rounded-2xl border border-slate-200 bg-slate-50"></div>
+                    <div class="h-16 animate-pulse rounded-2xl border border-slate-200 bg-slate-50"></div>
+                  </div>
+
+                  <div *ngIf="!loadingEvents && getEventsFor(r.id).length === 0" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-6 text-sm text-slate-600">
+                    Aún no hay eventos registrados para esta solicitud.
+                  </div>
+
+                  <div *ngIf="!loadingEvents && getEventsFor(r.id).length > 0" class="thin-scroll mt-4 max-h-[420px] space-y-3 overflow-auto pr-1">
+                    <article
+                      *ngFor="let evt of getEventsFor(r.id); trackBy: trackByEvent"
+                      class="rounded-2xl border border-slate-200 bg-slate-50/70 p-4"
+                    >
+                      <div class="flex flex-wrap items-center justify-between gap-2">
+                        <span
+                          class="inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold"
+                          [ngClass]="eventBadgeClass(evt)"
+                        >
+                          {{ evt.status_to || evt.event_type }}
+                        </span>
+
+                        <span class="text-xs text-slate-500">
+                          {{ fmtDate(evt.created_at) }}
+                        </span>
+                      </div>
+
+                      <h4 class="mt-3 text-sm font-semibold text-slate-900">{{ evt.title }}</h4>
+                      <p class="mt-1 text-sm leading-6 text-slate-600">
+                        {{ evt.message || 'Cambio registrado en la solicitud.' }}
+                      </p>
+
+                      <div class="mt-3 text-xs text-slate-500">
+                        Actor: {{ actorName(evt) }}
+                      </div>
+                    </article>
+                  </div>
+                </section>
               </div>
+
+              <section
+                *ngIf="r.status === 'DONE'"
+                class="mt-5 rounded-3xl border border-slate-200 bg-white p-5"
+              >
+                <h3 class="text-base font-semibold text-slate-900">
+                  Calificación del servicio
+                </h3>
+
+                <ng-container *ngIf="getReviewSummary(r.id) as rs">
+                  <div class="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                    <div class="text-sm text-slate-700">
+                      Estado cliente → técnico:
+                      <strong>{{ rs.customer_review_done ? 'Ya enviada' : 'Pendiente' }}</strong>
+                    </div>
+
+                    <div class="mt-1 text-sm text-slate-700">
+                      Estado técnico → cliente:
+                      <strong>{{ rs.worker_review_done ? 'Ya enviada' : 'Pendiente' }}</strong>
+                    </div>
+                  </div>
+
+                  <div
+                    *ngIf="rs.can_review_as_customer"
+                    class="mt-4 rounded-2xl border border-indigo-200 bg-indigo-50/50 p-4"
+                  >
+                    <div class="text-sm font-semibold text-slate-900">
+                      Califica al trabajador {{ r.assigned_worker_name || '' }}
+                    </div>
+
+                    <div class="mt-3 flex flex-wrap gap-2">
+                      <button
+                        *ngFor="let star of [1,2,3,4,5]"
+                        type="button"
+                        (click)="getReviewDraft(r.id).rating = star"
+                        class="rounded-2xl border px-3 py-2 text-sm font-semibold"
+                        [ngClass]="getReviewDraft(r.id).rating >= star
+                          ? 'border-amber-300 bg-amber-50 text-amber-800'
+                          : 'border-slate-200 bg-white text-slate-500'"
+                      >
+                        ★ {{ star }}
+                      </button>
+                    </div>
+
+                    <textarea
+                      class="mt-3 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none"
+                      rows="4"
+                      [(ngModel)]="getReviewDraft(r.id).comment"
+                      placeholder="Cuéntale a otros cómo fue el servicio..."
+                    ></textarea>
+
+                    <div *ngIf="getReviewDraft(r.id).error" class="mt-2 text-sm text-rose-700">
+                      {{ getReviewDraft(r.id).error }}
+                    </div>
+
+                    <button
+                      type="button"
+                      (click)="saveCustomerReview(r)"
+                      [disabled]="getReviewDraft(r.id).saving"
+                      class="mt-3 rounded-2xl border border-indigo-200 bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 disabled:opacity-60"
+                    >
+                      {{ getReviewDraft(r.id).saving ? 'Guardando…' : 'Guardar calificación' }}
+                    </button>
+                  </div>
+
+                  <div
+                    *ngIf="rs.worker_review"
+                    class="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4"
+                  >
+                    <div class="text-sm font-semibold text-emerald-900">
+                      El técnico ya te calificó
+                    </div>
+                    <div class="mt-2 text-sm text-slate-800">
+                      Puntuación: <strong>{{ rs.worker_review.rating }}/5</strong>
+                    </div>
+                    <div *ngIf="rs.worker_review.comment" class="mt-1 text-sm text-slate-700">
+                      "{{ rs.worker_review.comment }}"
+                    </div>
+                  </div>
+                </ng-container>
+              </section>
             </div>
-          </ng-container>
+          </article>
         </div>
       </div>
-    </div>
+    </section>
   </section>
 </main>

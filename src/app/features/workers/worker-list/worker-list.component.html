@@ -1,1 +1,573 @@
-<p>worker-list works!</p>
+  <section class="relative min-h-screen overflow-hidden bg-slate-50">
+    <!-- Fondo decorativo -->
+    <div class="pointer-events-none absolute inset-0 overflow-hidden">
+      <div class="absolute -left-24 top-0 h-72 w-72 rounded-full bg-sky-200/40 blur-3xl"></div>
+      <div class="absolute right-0 top-16 h-80 w-80 rounded-full bg-indigo-200/40 blur-3xl"></div>
+      <div class="absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-cyan-100/50 blur-3xl"></div>
+      <div class="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(15,23,42,0.03),_transparent_55%)]"></div>
+    </div>
+
+    <div class="relative mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <!-- HERO -->
+      <section
+        class="overflow-hidden rounded-[32px] border border-slate-800 bg-slate-950 text-white shadow-[0_24px_90px_rgba(15,23,42,0.28)]"
+      >
+        <div class="grid gap-6 px-5 py-6 sm:px-6 lg:grid-cols-[1.25fr_0.95fr] lg:px-8 lg:py-8">
+          <div class="min-w-0">
+            <span
+              class="inline-flex items-center rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-200 backdrop-blur"
+            >
+              Directorio de trabajadores
+            </span>
+
+            <h1 class="mt-4 max-w-3xl text-3xl font-black tracking-tight text-white sm:text-4xl xl:text-5xl">
+              Técnicos visibles, perfil premium y documentos públicos seguros
+            </h1>
+
+            <p class="mt-4 max-w-2xl text-sm leading-7 text-slate-300 sm:text-base">
+              Explora perfiles profesionales con una experiencia visual mucho más sólida,
+              moderna y confiable. Solo se muestran datos públicos del trabajador y
+              documentos visibles para el usuario.
+            </p>
+
+            <div class="mt-6 flex flex-wrap gap-2">
+              <span
+                class="inline-flex items-center rounded-full border border-white/10 bg-white/10 px-3 py-2 text-xs font-medium text-slate-200"
+              >
+                Perfiles públicos
+              </span>
+              <span
+                class="inline-flex items-center rounded-full border border-white/10 bg-white/10 px-3 py-2 text-xs font-medium text-slate-200"
+              >
+                Información verificada
+              </span>
+              <span
+                class="inline-flex items-center rounded-full border border-white/10 bg-white/10 px-3 py-2 text-xs font-medium text-slate-200"
+              >
+                Diseño responsive premium
+              </span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div class="rounded-3xl border border-white/10 bg-white/10 p-4 backdrop-blur">
+              <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-300">
+                Técnicos
+              </p>
+              <p class="mt-3 text-3xl font-black text-white">
+                {{ totalWorkers }}
+              </p>
+              <p class="mt-1 text-xs text-slate-300">
+                Disponibles en este listado
+              </p>
+            </div>
+
+            <div class="rounded-3xl border border-white/10 bg-white/10 p-4 backdrop-blur">
+              <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-300">
+                Verificados
+              </p>
+              <p class="mt-3 text-3xl font-black text-white">
+                {{ verifiedWorkers }}
+              </p>
+              <p class="mt-1 text-xs text-slate-300">
+                Con validación visible
+              </p>
+            </div>
+
+            <div class="rounded-3xl border border-white/10 bg-white/10 p-4 backdrop-blur">
+              <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-300">
+                Documentos
+              </p>
+              <p class="mt-3 text-3xl font-black text-white">
+                {{ visibleDocumentsCount }}
+              </p>
+              <p class="mt-1 text-xs text-slate-300">
+                Públicos para el usuario
+              </p>
+            </div>
+
+            <div class="rounded-3xl border border-white/10 bg-white/10 p-4 backdrop-blur">
+              <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-300">
+                Especialidades
+              </p>
+              <p class="mt-3 text-3xl font-black text-white">
+                {{ specialtiesCount }}
+              </p>
+              <p class="mt-1 text-xs text-slate-300">
+                Categorías detectadas
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="border-t border-white/10 bg-white/5 px-5 py-5 sm:px-6 lg:px-8">
+          <div class="flex flex-wrap items-center gap-2 text-xs text-slate-300">
+            <span class="rounded-full bg-white/10 px-3 py-1.5">Privacidad cuidada</span>
+            <span class="rounded-full bg-white/10 px-3 py-1.5">Solo datos visibles</span>
+            <span class="rounded-full bg-white/10 px-3 py-1.5">Perfiles claros y confiables</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- FILTROS -->
+      <section
+        class="relative z-10 mt-6 rounded-[30px] border border-slate-200/80 bg-white/95 p-4 shadow-[0_20px_70px_rgba(15,23,42,0.08)] backdrop-blur sm:mt-8 sm:p-5 lg:p-6"
+      >
+        <div class="grid gap-4 xl:grid-cols-[1.3fr_0.75fr_0.75fr_auto] xl:items-end">
+          <!-- Buscar -->
+          <div>
+            <label class="mb-2 block text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
+              Buscar trabajador
+            </label>
+
+            <div
+              class="group flex h-14 items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 transition focus-within:border-slate-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-slate-200"
+            >
+              <svg
+                class="h-5 w-5 text-slate-400 transition group-focus-within:text-slate-700"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="m21 21-4.35-4.35m1.35-5.15a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"
+                />
+              </svg>
+
+              <input
+                [(ngModel)]="search"
+                type="text"
+                placeholder="Nombre, especialidad o servicio"
+                (keyup.enter)="applyFilters()"
+                class="h-full w-full border-0 bg-transparent p-0 text-sm text-slate-900 outline-none placeholder:text-slate-400"
+              />
+            </div>
+          </div>
+
+          <!-- Ciudad -->
+          <div>
+            <label class="mb-2 block text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
+              Ciudad
+            </label>
+
+            <input
+              [(ngModel)]="city"
+              type="text"
+              placeholder="Ej. Barranquilla"
+              (keyup.enter)="applyFilters()"
+              class="h-14 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:bg-white focus:ring-4 focus:ring-slate-200"
+            />
+          </div>
+
+          <!-- Categoría -->
+          <div>
+            <label class="mb-2 block text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
+              Categoría
+            </label>
+
+            <select
+              [(ngModel)]="selectedCategory"
+              class="h-14 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:bg-white focus:ring-4 focus:ring-slate-200"
+            >
+              <option value="all">Todas</option>
+              <option *ngFor="let cat of categories; trackBy: trackByCategory" [value]="cat">
+                {{ cat }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Acciones -->
+          <div class="grid gap-2 sm:grid-cols-2 xl:flex xl:items-center xl:justify-end">
+            <button
+              type="button"
+              (click)="applyFilters()"
+              class="inline-flex h-14 items-center justify-center rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(15,23,42,0.18)] transition hover:-translate-y-0.5 hover:bg-slate-900"
+            >
+              Buscar
+            </button>
+
+            <button
+              type="button"
+              (click)="clearFilters()"
+              class="inline-flex h-14 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50"
+            >
+              Limpiar
+            </button>
+          </div>
+        </div>
+
+        <!-- Filtros rápidos -->
+        <div *ngIf="quickCategories.length > 0" class="thin-scroll mt-5 overflow-x-auto">
+          <div class="flex min-w-max items-center gap-2">
+            <button
+              type="button"
+              (click)="selectCategory('all')"
+              [ngClass]="
+                selectedCategory === 'all'
+                  ? 'bg-slate-950 text-white shadow-lg shadow-slate-900/15'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              "
+              class="inline-flex h-10 items-center rounded-full px-4 text-sm font-semibold transition"
+            >
+              Todas
+            </button>
+
+            <button
+              type="button"
+              *ngFor="let cat of quickCategories; trackBy: trackByCategory"
+              (click)="selectCategory(cat)"
+              [ngClass]="
+                selectedCategory === cat
+                  ? 'bg-slate-950 text-white shadow-lg shadow-slate-900/15'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              "
+              class="inline-flex h-10 items-center rounded-full px-4 text-sm font-semibold transition"
+            >
+              {{ cat }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Resumen -->
+        <div
+          class="mt-5 flex flex-col gap-3 rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-4 sm:flex-row sm:items-center sm:justify-between"
+        >
+          <div>
+            <p class="text-sm font-semibold text-slate-900">
+              {{ totalWorkers }} trabajador{{ totalWorkers === 1 ? '' : 'es' }} encontrado{{ totalWorkers === 1 ? '' : 's' }}
+            </p>
+            <p class="mt-1 text-xs text-slate-500">
+              Listado visual optimizado para explorar perfiles públicos de forma clara y segura.
+            </p>
+          </div>
+
+          <span
+            *ngIf="hasActiveFilters"
+            class="inline-flex w-fit items-center rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600"
+          >
+            Filtros activos
+          </span>
+        </div>
+      </section>
+
+      <!-- ERROR -->
+      <div
+        *ngIf="error"
+        class="mt-6 rounded-[24px] border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-medium text-rose-700 shadow-sm"
+      >
+        {{ error }}
+      </div>
+
+      <!-- LOADING -->
+      <section *ngIf="loading" class="mt-8 grid gap-6 md:grid-cols-2 2xl:grid-cols-3">
+        <article
+          *ngFor="let s of [1,2,3,4,5,6]"
+          class="overflow-hidden rounded-[30px] border border-slate-200 bg-white shadow-[0_16px_50px_rgba(15,23,42,0.06)]"
+        >
+          <div class="aspect-[4/5] animate-pulse bg-slate-200"></div>
+          <div class="space-y-4 p-5">
+            <div class="h-5 w-2/3 animate-pulse rounded-xl bg-slate-200"></div>
+            <div class="h-4 w-1/2 animate-pulse rounded-xl bg-slate-200"></div>
+
+            <div class="h-20 animate-pulse rounded-2xl bg-amber-100/60"></div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div class="h-16 animate-pulse rounded-2xl bg-slate-100"></div>
+              <div class="h-16 animate-pulse rounded-2xl bg-slate-100"></div>
+            </div>
+
+            <div class="h-16 animate-pulse rounded-2xl bg-slate-100"></div>
+            <div class="h-10 animate-pulse rounded-2xl bg-slate-100"></div>
+            <div class="h-10 animate-pulse rounded-2xl bg-slate-100"></div>
+          </div>
+        </article>
+      </section>
+
+      <!-- EMPTY -->
+      <section
+        *ngIf="!loading && !error && workers.length === 0"
+        class="mt-8 rounded-[32px] border border-dashed border-slate-300 bg-white px-6 py-16 text-center shadow-[0_20px_60px_rgba(15,23,42,0.05)]"
+      >
+        <div class="mx-auto flex h-20 w-20 items-center justify-center rounded-[28px] bg-slate-100 text-slate-700 shadow-inner">
+          <svg
+            class="h-8 w-8"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M17 17h.01M7 7h.01M7 17h.01M17 7h.01M10 6h4M6 10h12M6 14h12M10 18h4"
+            />
+          </svg>
+        </div>
+
+        <h2 class="mt-6 text-2xl font-black tracking-tight text-slate-900">
+          No encontramos trabajadores con esos filtros
+        </h2>
+
+        <p class="mx-auto mt-3 max-w-2xl text-sm leading-7 text-slate-500 sm:text-base">
+          Ajusta la búsqueda, cambia la ciudad o prueba otra categoría para descubrir
+          más perfiles disponibles.
+        </p>
+
+        <div class="mt-6">
+          <button
+            type="button"
+            (click)="clearFilters()"
+            class="inline-flex h-12 items-center justify-center rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-900"
+          >
+            Limpiar filtros
+          </button>
+        </div>
+      </section>
+
+      <!-- GRID -->
+      <section
+        *ngIf="!loading && !error && workers.length > 0"
+        class="mt-8 grid gap-6 md:grid-cols-2 2xl:grid-cols-3"
+      >
+        <article
+          *ngFor="let worker of workers; trackBy: trackByWorker"
+          class="group overflow-hidden rounded-[30px] border border-slate-200 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.08)] transition duration-300 hover:-translate-y-1.5 hover:shadow-[0_30px_80px_rgba(15,23,42,0.14)]"
+        >
+          <!-- Imagen -->
+          <div class="relative aspect-[4/5] overflow-hidden bg-slate-100">
+            <ng-container *ngIf="worker.photo_url; else photoFallback">
+              <img
+                [src]="worker.photo_url!"
+                [alt]="worker.public_name"
+                class="h-full w-full object-cover transition duration-700 group-hover:scale-[1.04]"
+              />
+            </ng-container>
+
+            <ng-template #photoFallback>
+              <div
+                class="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_top_left,_rgba(56,189,248,0.20),_transparent_25%),radial-gradient(circle_at_top_right,_rgba(99,102,241,0.18),_transparent_22%),linear-gradient(180deg,_#f8fafc_0%,_#e2e8f0_100%)]"
+              >
+                <div
+                  class="flex h-28 w-28 items-center justify-center rounded-[30px] bg-white/70 text-4xl font-black tracking-tight text-slate-900 shadow-[0_16px_40px_rgba(15,23,42,0.10)] backdrop-blur"
+                >
+                  {{ initials(worker.public_name) }}
+                </div>
+              </div>
+            </ng-template>
+
+            <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/10 to-transparent"></div>
+
+            <!-- Badges -->
+            <div class="absolute left-4 right-4 top-4 flex items-start justify-between gap-3">
+              <span
+                [ngClass]="badgeTone(worker.badge_level)"
+                class="inline-flex min-h-[36px] items-center rounded-full px-3.5 text-xs font-black uppercase tracking-[0.16em]"
+              >
+                {{ badgeLabel(worker.badge_level) }}
+              </span>
+
+              <span
+                [ngClass]="verificationTone(worker)"
+                class="inline-flex min-h-[36px] items-center rounded-full px-3.5 text-xs font-semibold"
+              >
+                {{ verificationLabel(worker) }}
+              </span>
+            </div>
+
+            <!-- Datos inferiores -->
+            <div class="absolute bottom-4 left-4 right-4">
+              <div class="grid grid-cols-2 gap-3">
+                <div class="rounded-2xl border border-white/10 bg-white/10 px-3 py-3 backdrop-blur-md">
+                  <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-300">
+                    Ciudad
+                  </p>
+                  <p class="mt-1 truncate text-sm font-semibold text-white">
+                    {{ cityLabel(worker) }}
+                  </p>
+                </div>
+
+                <div class="rounded-2xl border border-white/10 bg-white/10 px-3 py-3 backdrop-blur-md">
+                  <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-300">
+                    Experiencia
+                  </p>
+                  <p class="mt-1 truncate text-sm font-semibold text-white">
+                    {{ worker.years_experience != null ? worker.years_experience + ' años' : 'Validada' }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Body -->
+          <div class="p-5">
+            <div class="flex items-start justify-between gap-4">
+              <div class="min-w-0">
+                <h2 class="truncate text-xl font-black tracking-tight text-slate-900">
+                  {{ worker.public_name }}
+                </h2>
+
+                <p class="mt-1 text-sm font-medium text-slate-600">
+                  {{ specialtyLabel(worker) }}
+                </p>
+              </div>
+
+              <div class="shrink-0 rounded-2xl bg-slate-950 px-3 py-2 text-right text-white shadow-lg shadow-slate-900/10">
+                <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-300">
+                  Docs
+                </p>
+                <p class="mt-1 text-base font-black">
+                  {{ totalDocs(worker) }}
+                </p>
+              </div>
+            </div>
+
+            <!-- CALIFICACIÓN -->
+            <div class="mt-5 rounded-[24px] border border-amber-100 bg-amber-50/80 p-4 shadow-sm">
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                  <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-amber-700">
+                    Calificación
+                  </p>
+
+                  <div class="mt-2 flex flex-wrap items-end gap-x-2 gap-y-1">
+                    <span class="text-2xl font-black leading-none text-amber-900">
+                      {{ ratingText(worker) }}
+                    </span>
+                    <span class="text-xs font-bold text-amber-700">/5</span>
+                    <span class="text-xs font-semibold text-amber-900/80">
+                      • {{ reviewsLabel(worker) }}
+                    </span>
+                  </div>
+                </div>
+
+                <div class="rounded-full bg-white/90 px-3 py-2 ring-1 ring-amber-200 shadow-sm">
+                  <div class="flex items-center gap-1">
+                    <span
+                      *ngFor="let star of stars"
+                      class="text-sm"
+                      [ngClass]="star <= roundedRating(worker) ? 'text-amber-500' : 'text-slate-300'"
+                    >
+                      ★
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <p class="mt-3 text-sm leading-6 text-amber-900/80">
+                {{ ratingSummary(worker) }}
+              </p>
+            </div>
+
+            <div class="mt-5 grid grid-cols-2 gap-3">
+              <div class="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                  Ubicación
+                </p>
+                <p class="mt-2 text-sm font-semibold text-slate-900">
+                  {{ cityLabel(worker) }}
+                </p>
+              </div>
+
+              <div class="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                  Trayectoria
+                </p>
+                <p class="mt-2 text-sm font-semibold text-slate-900">
+                  {{ experienceLabel(worker) }}
+                </p>
+              </div>
+            </div>
+
+            <div class="mt-5 rounded-[24px] border border-slate-200 bg-white p-4">
+              <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                Perfil público
+              </p>
+              <p class="mt-3 min-h-[78px] text-sm leading-6 text-slate-600">
+                {{ shortBio(worker) }}
+              </p>
+            </div>
+
+            <div class="mt-5" *ngIf="worker.categories?.length">
+              <div class="mb-2 flex items-center justify-between gap-3">
+                <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                  Especialidades
+                </p>
+
+                <span
+                  class="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-500"
+                  *ngIf="extraCategories(worker) > 0"
+                >
+                  +{{ extraCategories(worker) }}
+                </span>
+              </div>
+
+              <div class="flex flex-wrap gap-2">
+                <span
+                  *ngFor="let cat of worker.categories | slice:0:3"
+                  class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700"
+                >
+                  {{ cat }}
+                </span>
+              </div>
+            </div>
+
+            <div class="mt-5 rounded-[24px] border border-emerald-100 bg-emerald-50/70 p-4">
+              <div class="flex items-center justify-between gap-3">
+                <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-700">
+                  Documentos visibles
+                </p>
+
+                <span class="rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
+                  {{ publicDocsLabel(worker) }}
+                </span>
+              </div>
+
+              <div
+                class="mt-3 flex flex-wrap gap-2"
+                *ngIf="worker.visible_documents?.length; else noPublicDocs"
+              >
+                <span
+                  *ngFor="let label of previewDocs(worker)"
+                  class="inline-flex items-center rounded-full border border-emerald-200 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-800"
+                >
+                  {{ label }}
+                </span>
+
+                <span
+                  *ngIf="extraDocs(worker) > 0"
+                  class="inline-flex items-center rounded-full border border-emerald-200 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-800"
+                >
+                  +{{ extraDocs(worker) }} más
+                </span>
+              </div>
+
+              <ng-template #noPublicDocs>
+                <p class="mt-3 text-sm leading-6 text-emerald-800/80">
+                  Este perfil aún no tiene documentos públicos para mostrar.
+                </p>
+              </ng-template>
+            </div>
+
+            <div class="mt-5 grid gap-3">
+              <a
+                class="inline-flex h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50"
+                [routerLink]="['/workers', worker.id]"
+              >
+                Ver perfil
+              </a>
+
+              <a
+                class="inline-flex h-12 items-center justify-center rounded-2xl bg-slate-950 px-4 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(15,23,42,0.18)] transition hover:-translate-y-0.5 hover:bg-slate-900"
+                routerLink="/requests/new"
+              >
+                Solicitar técnico
+              </a>
+            </div>
+          </div>
+        </article>
+      </section>
+    </div>
+  </section>

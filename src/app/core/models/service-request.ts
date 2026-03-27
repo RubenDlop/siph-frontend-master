@@ -9,6 +9,15 @@ export type RequestStatus =
 
 export type ContactPref = 'WHATSAPP' | 'CALL' | 'CHAT';
 
+export interface RequestUserLite {
+  id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  role: string;
+  is_active: boolean;
+}
+
 export interface ServiceRequestCreate {
   category: string;
   title: string;
@@ -21,12 +30,11 @@ export interface ServiceRequestCreate {
   address?: string | null;
   address_ref?: string | null;
 
-  // ✅ GEO
   lat?: number | null;
   lng?: number | null;
   accuracy_m?: number | null;
 
-  schedule_date?: string | null; // YYYY-MM-DD
+  schedule_date?: string | null;
   time_window?: string | null;
 
   budget_min?: number | null;
@@ -40,6 +48,7 @@ export interface ServiceRequestCreate {
 export interface ServiceRequest {
   id: number;
   user_id: number;
+  assigned_worker_id?: number | null;
 
   category: string;
   title: string;
@@ -52,7 +61,6 @@ export interface ServiceRequest {
   address?: string | null;
   address_ref?: string | null;
 
-  // ✅ GEO
   lat?: number | null;
   lng?: number | null;
   accuracy_m?: number | null;
@@ -68,9 +76,55 @@ export interface ServiceRequest {
   contact_pref?: ContactPref | null;
 
   status: RequestStatus;
-  created_at?: string;
-  updated_at?: string;
+
+  assigned_at?: string | null;
+  accepted_at?: string | null;
+  started_at?: string | null;
+  completed_at?: string | null;
+
+  created_at?: string | null;
+  updated_at?: string | null;
+
+  customer?: RequestUserLite | null;
+  assigned_worker?: RequestUserLite | null;
+
+  client_name?: string | null;
+  client_email?: string | null;
+  assigned_worker_name?: string | null;
+  assigned_worker_email?: string | null;
 }
 
-// ✅ Antes era Pick<...> (resumen). Ahora: trae TODO.
 export type ServiceRequestListItem = ServiceRequest;
+
+export interface RequestMessageCreate {
+  body: string;
+}
+
+export interface RequestMessage {
+  id: number;
+  request_id: number;
+  sender_user_id: number;
+  body: string;
+  created_at: string;
+  read_at?: string | null;
+
+  sender?: RequestUserLite | null;
+
+  sender_name?: string | null;
+  sender_role?: string | null;
+  is_mine?: boolean;
+}
+
+export interface RequestEvent {
+  id: number;
+  request_id: number;
+  actor_user_id?: number | null;
+  event_type: string;
+  title: string;
+  message?: string | null;
+  status_from?: string | null;
+  status_to?: string | null;
+  meta?: Record<string, any>;
+  created_at: string;
+  actor?: RequestUserLite | null;
+}

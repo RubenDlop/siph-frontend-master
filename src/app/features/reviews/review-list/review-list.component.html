@@ -1,1 +1,311 @@
-<p>review-list works!</p>
+<section class="reviews-page">
+  <div class="reviews-bg">
+    <div class="glow glow--one"></div>
+    <div class="glow glow--two"></div>
+    <div class="glow glow--three"></div>
+    <div class="grid-overlay"></div>
+  </div>
+
+  <div class="reviews-shell">
+    <header class="hero">
+      <div class="hero__copy">
+        <span class="hero__eyebrow">
+          Reseñas verificadas
+        </span>
+
+        <h1>
+          Opiniones reales con una experiencia visual premium
+        </h1>
+
+        <p>
+          Mira cómo valoran los usuarios el servicio recibido. Las reseñas se muestran
+          como mensajes flotantes con movimiento continuo, estilo moderno y lectura clara.
+        </p>
+
+        <div class="hero__meta">
+          <div class="metric-card">
+            <span class="metric-card__label">Promedio</span>
+            <div class="metric-card__value">
+              {{ averageRating ?? '—' }}
+              <span>/5</span>
+            </div>
+          </div>
+
+          <div class="metric-card">
+            <span class="metric-card__label">Reseñas</span>
+            <div class="metric-card__value">
+              {{ reviewsCount }}
+            </div>
+          </div>
+
+
+        </div>
+      </div>
+
+      <div class="hero__rating-card">
+        <div class="hero__rating-top">
+          <span class="pill">Experiencia visual</span>
+          <span class="pill pill--soft" *ngIf="workerId">Trabajador #{{ workerId }}</span>
+          <span class="pill pill--soft" *ngIf="demoMode">Sin workerId</span>
+        </div>
+
+        <div class="hero__big-score">
+          {{ averageRating ?? '—' }}
+        </div>
+
+        <div class="hero__stars" *ngIf="averageRating">
+          <span *ngFor="let s of stars">★</span>
+        </div>
+
+        <p class="hero__note">
+         personal capacitado para todo tipo de actividades
+        </p>
+      </div>
+    </header>
+
+    <div *ngIf="loading" class="state-card">
+      <div class="state-card__icon">⏳</div>
+      <div>
+        <h3>Cargando reseñas…</h3>
+        <p>Estamos preparando la vista premium.</p>
+      </div>
+    </div>
+
+    <div *ngIf="!loading && error" class="state-card state-card--error">
+      <div class="state-card__icon">⚠️</div>
+      <div>
+        <h3>No se pudieron cargar las reseñas</h3>
+        <p>{{ error }}</p>
+      </div>
+    </div>
+
+    <div *ngIf="!loading && !error && reviews.length === 0" class="state-card">
+      <div class="state-card__icon">💬</div>
+      <div>
+        <h3>Aún no hay reseñas públicas</h3>
+        <p>Cuando existan calificaciones visibles, aparecerán aquí con este diseño flotante.</p>
+      </div>
+    </div>
+
+    <section
+      *ngIf="!loading && !error && reviews.length > 0"
+      class="floating-wall"
+    >
+      <div class="floating-column">
+        <div class="floating-track floating-track--up">
+          <article
+            class="review-card"
+            *ngFor="let review of columnA; trackBy: trackByReview"
+          >
+            <div class="review-card__top">
+              <div class="reviewer">
+                <div class="reviewer__avatar">{{ review.reviewer_initials }}</div>
+                <div class="reviewer__meta">
+                  <h3>{{ review.reviewer_name }}</h3>
+                  <span>{{ review.relative_time }}</span>
+                </div>
+              </div>
+
+              <div class="review-card__score">
+                <span>{{ review.rating }}</span>
+                <small>/5</small>
+              </div>
+            </div>
+
+            <div class="review-card__stars">
+              <span class="star star--filled" *ngFor="let _ of fullStars(review.rating)">★</span>
+              <span class="star" *ngFor="let _ of emptyStars(review.rating)">★</span>
+            </div>
+
+            <p class="review-card__text">
+              “{{ review.comment }}”
+            </p>
+
+            <div class="review-card__footer">
+              <span class="tag">Reseña verificada</span>
+              <span class="tag tag--soft">{{ review.reviewer_role }}</span>
+            </div>
+          </article>
+
+          <article
+            class="review-card review-card--clone"
+            *ngFor="let review of columnA; trackBy: trackByReview"
+          >
+            <div class="review-card__top">
+              <div class="reviewer">
+                <div class="reviewer__avatar">{{ review.reviewer_initials }}</div>
+                <div class="reviewer__meta">
+                  <h3>{{ review.reviewer_name }}</h3>
+                  <span>{{ review.relative_time }}</span>
+                </div>
+              </div>
+
+              <div class="review-card__score">
+                <span>{{ review.rating }}</span>
+                <small>/5</small>
+              </div>
+            </div>
+
+            <div class="review-card__stars">
+              <span class="star star--filled" *ngFor="let _ of fullStars(review.rating)">★</span>
+              <span class="star" *ngFor="let _ of emptyStars(review.rating)">★</span>
+            </div>
+
+            <p class="review-card__text">
+              “{{ review.comment }}”
+            </p>
+
+            <div class="review-card__footer">
+              <span class="tag">Reseña verificada</span>
+              <span class="tag tag--soft">{{ review.reviewer_role }}</span>
+            </div>
+          </article>
+        </div>
+      </div>
+
+      <div class="floating-column floating-column--center">
+        <div class="floating-track floating-track--down">
+          <article
+            class="review-card review-card--featured"
+            *ngFor="let review of columnB; trackBy: trackByReview"
+          >
+            <div class="review-card__top">
+              <div class="reviewer">
+                <div class="reviewer__avatar">{{ review.reviewer_initials }}</div>
+                <div class="reviewer__meta">
+                  <h3>{{ review.reviewer_name }}</h3>
+                  <span>{{ review.relative_time }}</span>
+                </div>
+              </div>
+
+              <div class="review-card__score">
+                <span>{{ review.rating }}</span>
+                <small>/5</small>
+              </div>
+            </div>
+
+            <div class="review-card__stars">
+              <span class="star star--filled" *ngFor="let _ of fullStars(review.rating)">★</span>
+              <span class="star" *ngFor="let _ of emptyStars(review.rating)">★</span>
+            </div>
+
+            <p class="review-card__text">
+              “{{ review.comment }}”
+            </p>
+
+            <div class="review-card__footer">
+              <span class="tag">Opinión real</span>
+              <span class="tag tag--soft">{{ review.reviewer_role }}</span>
+            </div>
+          </article>
+
+          <article
+            class="review-card review-card--featured review-card--clone"
+            *ngFor="let review of columnB; trackBy: trackByReview"
+          >
+            <div class="review-card__top">
+              <div class="reviewer">
+                <div class="reviewer__avatar">{{ review.reviewer_initials }}</div>
+                <div class="reviewer__meta">
+                  <h3>{{ review.reviewer_name }}</h3>
+                  <span>{{ review.relative_time }}</span>
+                </div>
+              </div>
+
+              <div class="review-card__score">
+                <span>{{ review.rating }}</span>
+                <small>/5</small>
+              </div>
+            </div>
+
+            <div class="review-card__stars">
+              <span class="star star--filled" *ngFor="let _ of fullStars(review.rating)">★</span>
+              <span class="star" *ngFor="let _ of emptyStars(review.rating)">★</span>
+            </div>
+
+            <p class="review-card__text">
+              “{{ review.comment }}”
+            </p>
+
+            <div class="review-card__footer">
+              <span class="tag">Opinión real</span>
+              <span class="tag tag--soft">{{ review.reviewer_role }}</span>
+            </div>
+          </article>
+        </div>
+      </div>
+
+      <div class="floating-column">
+        <div class="floating-track floating-track--up-slow">
+          <article
+            class="review-card"
+            *ngFor="let review of columnC; trackBy: trackByReview"
+          >
+            <div class="review-card__top">
+              <div class="reviewer">
+                <div class="reviewer__avatar">{{ review.reviewer_initials }}</div>
+                <div class="reviewer__meta">
+                  <h3>{{ review.reviewer_name }}</h3>
+                  <span>{{ review.relative_time }}</span>
+                </div>
+              </div>
+
+              <div class="review-card__score">
+                <span>{{ review.rating }}</span>
+                <small>/5</small>
+              </div>
+            </div>
+
+            <div class="review-card__stars">
+              <span class="star star--filled" *ngFor="let _ of fullStars(review.rating)">★</span>
+              <span class="star" *ngFor="let _ of emptyStars(review.rating)">★</span>
+            </div>
+
+            <p class="review-card__text">
+              “{{ review.comment }}”
+            </p>
+
+            <div class="review-card__footer">
+              <span class="tag">Cliente</span>
+              <span class="tag tag--soft">{{ review.reviewer_role }}</span>
+            </div>
+          </article>
+
+          <article
+            class="review-card review-card--clone"
+            *ngFor="let review of columnC; trackBy: trackByReview"
+          >
+            <div class="review-card__top">
+              <div class="reviewer">
+                <div class="reviewer__avatar">{{ review.reviewer_initials }}</div>
+                <div class="reviewer__meta">
+                  <h3>{{ review.reviewer_name }}</h3>
+                  <span>{{ review.relative_time }}</span>
+                </div>
+              </div>
+
+              <div class="review-card__score">
+                <span>{{ review.rating }}</span>
+                <small>/5</small>
+              </div>
+            </div>
+
+            <div class="review-card__stars">
+              <span class="star star--filled" *ngFor="let _ of fullStars(review.rating)">★</span>
+              <span class="star" *ngFor="let _ of emptyStars(review.rating)">★</span>
+            </div>
+
+            <p class="review-card__text">
+              “{{ review.comment }}”
+            </p>
+
+            <div class="review-card__footer">
+              <span class="tag">Cliente</span>
+              <span class="tag tag--soft">{{ review.reviewer_role }}</span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+  </div>
+</section>

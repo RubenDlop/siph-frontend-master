@@ -1,31 +1,15 @@
-# backend/app/main.py
 import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .core.database import Base, engine
-
-# =========================
-# Importar modelos (side effects: registrar tablas)
-# =========================
-from .models.user import User  # noqa: F401
-from .models.service_request import ServiceRequest  # noqa: F401
-from .models.worker_application import WorkerApplication  # noqa: F401
-from .models.technician_verification import (  # noqa: F401
-    TechnicianProfile,
-    VerificationCase,
-    VerificationDocument,
-    VerificationAuditLog,
-)
-
-# =========================
-# Importar routers
-# =========================
 from .routers import (
     auth,
     requests,
+    reviews,
+    worker_requests,
     worker_applications,
+    workers_public,
     technician_verification,
     admin_technician_verification,
     admin_worker_applications,
@@ -35,17 +19,13 @@ from .routers import (
 app = FastAPI(title="SIPH API")
 
 
-def parse_origins(raw: str) -> list[str]:
-    return [item.strip().rstrip("/") for item in raw.split(",") if item.strip()]
+def _split_csv(value: str) -> list[str]:
+    return [item.strip().rstrip("/") for item in value.split(",") if item.strip()]
 
 
-# =========================
-# CORS
-# =========================
-raw = os.getenv("CORS_ORIGINS", "").strip()
-allow_origins = parse_origins(raw)
+raw_origins = os.getenv("CORS_ORIGINS", "").strip()
+allow_origins = _split_csv(raw_origins) if raw_origins else []
 
-# fallback robusto
 if not allow_origins:
     allow_origins = [
         "http://localhost:4200",
@@ -55,47 +35,39 @@ if not allow_origins:
         "https://siph-frontend-master.netlify.app",
     ]
 
+allow_origin_regex = (
+    r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$"
+    r"|^https://.*\.netlify\.app$"
+)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allow_origins,
-    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
+    allow_origin_regex=allow_origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["*"],
+    expose_headers=["Content-Disposition"],
 )
 
 # =========================
-# Crear tablas (modo prototipo/dev)
-# =========================
-Base.metadata.create_all(bind=engine)
-
-# =========================
-# Routers públicos / auth
+# ROUTERS
 # =========================
 app.include_router(auth.router)
 app.include_router(requests.router)
+app.include_router(reviews.router)
+app.include_router(workers_public.router)
 
-# =========================
-# USER routes
-# =========================
+app.include_router(worker_requests.router)
 app.include_router(worker_applications.router)
 app.include_router(technician_verification.router)
 
-# =========================
-# ADMIN routes
-# =========================
 app.include_router(admin_worker_applications.router)
 app.include_router(admin_technician_verification.router)
 
-# =========================
-# MANYCHAT routes
-# =========================
 app.include_router(manychat.router)
 
-# =========================
-# Healthchecks
-# =========================
+
 @app.get("/health")
 def health():
     return {

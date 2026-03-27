@@ -8,7 +8,7 @@ import { StorageService } from '../../../core/services/storage.service';
   standalone: true,
   imports: [RouterLink, RouterLinkActive, NgIf],
   templateUrl: './navbar.component.html',
-  styleUrls: ['./navbar.component.scss'], // ✅ OJO: styleUrls (no styleUrl)
+  styleUrls: ['./navbar.component.scss'],
 })
 export class NavbarComponent {
   private storage = inject(StorageService);
@@ -42,6 +42,10 @@ export class NavbarComponent {
     return this.role === 'ADMIN';
   }
 
+  get canSeeWorkerRequests(): boolean {
+    return this.isWorker || this.isAdmin;
+  }
+
   get initials(): string {
     const u = this.user;
     const a = (u?.first_name || 'U').trim().charAt(0).toUpperCase();
@@ -49,37 +53,35 @@ export class NavbarComponent {
     return (a + b) || 'U';
   }
 
-  toggleMenu() {
+  toggleMenu(): void {
     this.menuOpen = !this.menuOpen;
     if (!this.menuOpen) this.userMenuOpen = false;
   }
 
-  closeMenu() {
+  closeMenu(): void {
     this.menuOpen = false;
     this.userMenuOpen = false;
   }
 
-  toggleUserMenu() {
+  toggleUserMenu(): void {
     this.userMenuOpen = !this.userMenuOpen;
   }
 
-  logout() {
+  logout(): void {
     this.storage.clearToken();
     this.closeMenu();
     this.router.navigate(['/auth/login']);
   }
 
-  // ✅ Cierra al hacer click fuera
   @HostListener('document:click', ['$event'])
-  onDocClick(ev: MouseEvent) {
+  onDocClick(ev: MouseEvent): void {
     const target = ev.target as Node | null;
     if (!target) return;
     if (!this.el.nativeElement.contains(target)) this.closeMenu();
   }
 
-  // ✅ ESC para cerrar
   @HostListener('document:keydown.escape')
-  onEsc() {
+  onEsc(): void {
     this.closeMenu();
   }
 }

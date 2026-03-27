@@ -3,14 +3,12 @@ import { authGuard } from './core/guards/auth.guard';
 import { roleGuard } from './core/guards/role.guard';
 
 export const routes: Routes = [
-  // ✅ HOME (Landing)
   {
     path: '',
     loadComponent: () =>
       import('./features/home/home.component').then((m) => m.HomeComponent),
   },
 
-  // ✅ DASHBOARD
   {
     path: 'dashboard',
     canActivate: [authGuard],
@@ -20,7 +18,6 @@ export const routes: Routes = [
       ),
   },
 
-  // ✅ AUTH
   {
     path: 'auth/login',
     loadComponent: () =>
@@ -36,11 +33,9 @@ export const routes: Routes = [
       ),
   },
 
-  // ✅ Alias
   { path: 'login', redirectTo: 'auth/login', pathMatch: 'full' },
   { path: 'register', redirectTo: 'auth/register', pathMatch: 'full' },
 
-  // ✅ Workers (listado / perfil público)
   {
     path: 'workers',
     loadComponent: () =>
@@ -56,7 +51,16 @@ export const routes: Routes = [
       ),
   },
 
-  // ✅ Requests
+  {
+    path: 'worker/requests',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['WORKER', 'ADMIN'] },
+    loadComponent: () =>
+      import('./features/workers/worker-requests/worker-requests.component').then(
+        (m) => m.WorkerRequestsComponent
+      ),
+  },
+
   {
     path: 'requests/new',
     canActivate: [authGuard],
@@ -74,7 +78,6 @@ export const routes: Routes = [
       ),
   },
 
-  // ✅ Reviews
   {
     path: 'reviews',
     canActivate: [authGuard],
@@ -84,18 +87,15 @@ export const routes: Routes = [
       ),
   },
 
-  // ✅ 🤖 Asistente IA Local (Gradio) - pantalla completa (opcional)
-  // URL: /assistant
   {
     path: 'assistant',
-    canActivate: [authGuard], // ✅ quita authGuard si lo quieres público
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./features/assistant/assistant.component').then(
         (m) => m.AssistantComponent
       ),
   },
 
-  // ✅ 👷‍♂️ Solicitud para trabajar como Técnico (SOLO USER)
   {
     path: 'work/apply',
     canActivate: [authGuard, roleGuard],
@@ -106,9 +106,6 @@ export const routes: Routes = [
       ).then((m) => m.WorkerApplyComponent),
   },
 
-  // ✅ 🛡️ Admin: revisar solicitudes (SOLO ADMIN)
-  // ✅ LISTADO: /admin/worker-applications
-  // ✅ DETALLE FULL: /admin/worker-applications/:id
   {
     path: 'admin/worker-applications',
     canActivate: [authGuard, roleGuard],
@@ -131,7 +128,6 @@ export const routes: Routes = [
     ],
   },
 
-  // ✅ Not Found
   {
     path: '**',
     loadComponent: () =>

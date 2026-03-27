@@ -44,7 +44,7 @@ export class AppComponent implements OnInit {
     }
 
     if (role === 'WORKER') {
-      this.router.navigateByUrl('/dashboard');
+      this.router.navigateByUrl('/worker/requests');
       return;
     }
 

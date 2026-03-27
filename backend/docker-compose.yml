@@ -1,16 +1,14 @@
 services:
-  db:
-    image: postgres:15
-    container_name: siph_db
+  dynamodb:
+    image: amazon/dynamodb-local:latest
+    container_name: siph_dynamodb
     restart: always
-    environment:
-      POSTGRES_DB: siph
-      POSTGRES_USER: siph
-      POSTGRES_PASSWORD: siph
+    working_dir: /home/dynamodblocal
+    command: "-jar DynamoDBLocal.jar -sharedDb -dbPath /home/dynamodblocal/data"
     ports:
-      - "5432:5432"
+      - "8001:8000"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - ./docker/dynamodb:/home/dynamodblocal/data
 
   api:
     build: .
@@ -21,27 +19,33 @@ services:
       - .env
 
     environment:
-      DATABASE_URL: postgresql+psycopg2://siph:siph@db:5432/siph
+      AWS_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: local
+      AWS_SECRET_ACCESS_KEY: local
+      DYNAMODB_ENDPOINT_URL: http://dynamodb:8000
+      DYNAMODB_TABLE_PREFIX: siph_
+
       JWT_SECRET_KEY: change-me
       JWT_ALGORITHM: HS256
       JWT_EXPIRATION_MINUTES: 60
+
       GOOGLE_CLIENT_ID: 1026227617402-hts4hu699cuo0gmh5fg8sh8ncjfdvo76.apps.googleusercontent.com
 
-      # Azure / Entra ID
       AZURE_TENANT_ID: 8091eb44-4181-4c3c-b53d-fd6add70b0d9
       AZURE_SPA_CLIENT_ID: 628629c9-2b9b-43e7-a9e4-949b5af8a5f4
       AZURE_API_CLIENT_ID: b6a729ea-ecc2-4014-814c-4c10d21a0e24
       AZURE_AUTHORITY: https://login.microsoftonline.com/8091eb44-4181-4c3c-b53d-fd6add70b0d9
       AZURE_API_SCOPE: api://b6a729ea-ecc2-4014-814c-4c10d21a0e24/access_as_user
 
-      # CORS
+      MANYCHAT_SHARED_SECRET: your-manychat-secret
+
       CORS_ORIGINS: http://localhost:4200,http://127.0.0.1:4200
 
     ports:
       - "8000:8000"
 
     depends_on:
-      - db
+      - dynamodb
 
     volumes:
       - .:/app
@@ -50,10 +54,7 @@ services:
     working_dir: /app
 
     command: >
-      uvicorn app.main:app
-      --host 0.0.0.0
-      --port 8000
-      --reload
+      sh -c "python -m app.scripts.create_dynamodb_tables &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
 
-volumes:
-  pgdata:
+volumes: {}

@@ -2,8 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 @import "leaflet/dist/leaflet.css";
+
 @layer base {
-  html, body {
+  html,
+  body {
     height: 100%;
     margin: 0;
     background: #0b1220;
@@ -14,6 +16,7 @@
     box-sizing: border-box;
   }
 }
+
 /* Leaflet + Tailwind fix (tiles en blanco) */
 .leaflet-container {
   width: 100%;

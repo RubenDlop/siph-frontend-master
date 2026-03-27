@@ -1,1 +1,754 @@
-<p>worker-requests works!</p>
+<section class="min-h-screen bg-slate-50">
+  <div class="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
+    <div
+      class="mb-5 overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_10px_40px_rgba(15,23,42,0.06)]"
+    >
+      <div
+        class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 px-5 py-6 text-white sm:px-6 lg:px-8"
+      >
+        <div
+          class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between"
+        >
+          <div class="max-w-2xl">
+            <span
+              class="inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-xs font-semibold tracking-wide text-white/90 ring-1 ring-white/15"
+            >
+              Panel del trabajador
+            </span>
+
+            <h1 class="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
+              Solicitudes simples, rápidas y claras
+            </h1>
+
+            <p class="mt-2 max-w-xl text-sm text-slate-300 sm:text-base">
+              Revisa solicitudes, toma un servicio, chatea con el cliente y deja tu calificación al finalizar.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 sm:min-w-[320px]">
+            <div class="rounded-2xl bg-white/10 p-4 ring-1 ring-white/10 backdrop-blur">
+              <p class="text-xs uppercase tracking-wide text-slate-300">
+                Disponibles
+              </p>
+              <p class="mt-2 text-2xl font-bold">{{ availableCount }}</p>
+              <p class="mt-1 text-xs text-slate-300">Para tomar ahora</p>
+            </div>
+
+            <div class="rounded-2xl bg-white/10 p-4 ring-1 ring-white/10 backdrop-blur">
+              <p class="text-xs uppercase tracking-wide text-slate-300">
+                Mis servicios
+              </p>
+              <p class="mt-2 text-2xl font-bold">{{ myJobsCount }}</p>
+              <p class="mt-1 text-xs text-slate-300">En seguimiento</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-4 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
+        <div class="rounded-2xl bg-slate-50 px-4 py-3 ring-1 ring-slate-200">
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Acción recomendada
+          </p>
+          <p class="mt-1 text-sm font-semibold text-slate-900">
+            {{ nextActionText }}
+          </p>
+        </div>
+
+        <div class="inline-flex rounded-2xl bg-slate-100 p-1 ring-1 ring-slate-200">
+          <button
+            type="button"
+            class="rounded-xl px-4 py-2 text-sm font-semibold transition"
+            [ngClass]="
+              activeTab === 'available'
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-500 hover:text-slate-800'
+            "
+            (click)="setTab('available')"
+          >
+            Disponibles
+          </button>
+
+          <button
+            type="button"
+            class="rounded-xl px-4 py-2 text-sm font-semibold transition"
+            [ngClass]="
+              activeTab === 'mine'
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-500 hover:text-slate-800'
+            "
+            (click)="setTab('mine')"
+          >
+            Mis servicios
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      *ngIf="error"
+      class="mb-5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700"
+    >
+      {{ error }}
+    </div>
+
+    <div class="grid gap-5 xl:grid-cols-[380px_minmax(0,1fr)]">
+      <aside
+        class="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_10px_40px_rgba(15,23,42,0.05)]"
+      >
+        <div class="border-b border-slate-200 px-5 py-5">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <h2 class="text-lg font-bold text-slate-900">
+                {{ listTitle }}
+              </h2>
+              <p class="mt-1 text-sm text-slate-500">
+                {{ listSubtitle }}
+              </p>
+            </div>
+
+            <span
+              class="inline-flex min-h-9 min-w-9 items-center justify-center rounded-full bg-slate-900 px-3 text-sm font-bold text-white"
+            >
+              {{ listToRender.length }}
+            </span>
+          </div>
+        </div>
+
+        <div class="thin-scroll max-h-[72vh] overflow-y-auto p-4">
+          <div *ngIf="listLoading" class="space-y-3">
+            <div
+              *ngFor="let s of [1, 2, 3, 4]"
+              class="animate-pulse rounded-2xl border border-slate-200 bg-slate-50 p-4"
+            >
+              <div class="mb-3 flex items-center justify-between">
+                <div class="h-5 w-24 rounded bg-slate-200"></div>
+                <div class="h-5 w-20 rounded bg-slate-200"></div>
+              </div>
+              <div class="h-5 w-3/4 rounded bg-slate-200"></div>
+              <div class="mt-3 h-4 w-full rounded bg-slate-200"></div>
+              <div class="mt-2 h-4 w-2/3 rounded bg-slate-200"></div>
+            </div>
+          </div>
+
+          <div
+            *ngIf="!listLoading && listToRender.length === 0"
+            class="rounded-3xl border border-dashed border-slate-200 bg-slate-50 px-5 py-10 text-center"
+          >
+            <div
+              class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-slate-200"
+            >
+              <span class="text-xl">🛠️</span>
+            </div>
+
+            <h3 class="mt-4 text-base font-bold text-slate-900">
+              {{ emptyTitle }}
+            </h3>
+
+            <p class="mt-2 text-sm leading-6 text-slate-500">
+              {{ emptyDescription }}
+            </p>
+          </div>
+
+          <div *ngIf="!listLoading && listToRender.length > 0" class="space-y-3">
+            <button
+              type="button"
+              *ngFor="let req of listToRender; trackBy: trackByRequestId"
+              (click)="selectRequest(req)"
+              class="w-full rounded-3xl border bg-white p-4 text-left transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md focus:outline-none"
+              [ngClass]="
+                selectedRequest?.id === req.id
+                  ? 'border-slate-900 ring-2 ring-slate-900/10'
+                  : 'border-slate-200 hover:border-slate-300'
+              "
+            >
+              <div class="flex items-start justify-between gap-3">
+                <span
+                  class="inline-flex rounded-full px-3 py-1 text-xs font-semibold ring-1 ring-inset"
+                  [ngClass]="statusClass(req.status)"
+                >
+                  {{ statusLabel(req.status) }}
+                </span>
+
+                <span
+                  class="shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700"
+                >
+                  {{ req.category || 'General' }}
+                </span>
+              </div>
+
+              <h3 class="mt-3 text-base font-bold leading-5 text-slate-900">
+                {{ req.title }}
+              </h3>
+
+              <p class="mt-2 text-sm leading-5 text-slate-500">
+                {{ req.description || 'Sin descripción' }}
+              </p>
+
+              <div class="mt-4 grid gap-2 text-sm text-slate-600">
+                <div class="flex items-center gap-2">
+                  <span>📍</span>
+                  <span>{{ locationLabel(req) }}</span>
+                </div>
+
+                <div class="flex items-center gap-2">
+                  <span>💰</span>
+                  <span>{{ budgetLabel(req) }}</span>
+                </div>
+
+                <div class="flex items-center gap-2">
+                  <span>👤</span>
+                  <span>{{ req.client_name || 'Cliente no disponible' }}</span>
+                </div>
+              </div>
+
+              <div class="mt-4 flex items-center justify-between border-t border-slate-100 pt-3">
+                <span
+                  class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset"
+                  [ngClass]="urgencyClass(req.urgency)"
+                >
+                  {{ req.urgency || 'Sin urgencia definida' }}
+                </span>
+
+                <small class="text-xs text-slate-400" *ngIf="req.created_at">
+                  {{ req.created_at | date:'short' }}
+                </small>
+              </div>
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <section class="space-y-5">
+        <ng-container *ngIf="selectedRequest; else noSelection">
+          <div
+            class="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_10px_40px_rgba(15,23,42,0.05)]"
+          >
+            <div class="border-b border-slate-200 px-5 py-5 sm:px-6">
+              <div class="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+                <div class="min-w-0">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span
+                      class="inline-flex rounded-full px-3 py-1 text-xs font-semibold ring-1 ring-inset"
+                      [ngClass]="statusClass(selectedRequest.status)"
+                    >
+                      {{ statusLabel(selectedRequest.status) }}
+                    </span>
+
+                    <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                      {{ selectedRequest.category || 'General' }}
+                    </span>
+                  </div>
+
+                  <h2 class="mt-3 text-2xl font-bold tracking-tight text-slate-900">
+                    {{ selectedRequest.title }}
+                  </h2>
+
+                  <p class="mt-2 text-sm text-slate-500">
+                    {{ nextActionText }}
+                  </p>
+                </div>
+
+                <div class="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    *ngIf="canAccept(selectedRequest)"
+                    [disabled]="actionLoadingId === selectedRequest.id"
+                    (click)="accept(selectedRequest)"
+                    class="inline-flex items-center rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {{ actionLoadingId === selectedRequest.id ? 'Aceptando...' : 'Aceptar solicitud' }}
+                  </button>
+
+                  <button
+                    type="button"
+                    *ngIf="canRelease(selectedRequest)"
+                    [disabled]="actionLoadingId === selectedRequest.id"
+                    (click)="release(selectedRequest)"
+                    class="inline-flex items-center rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {{ actionLoadingId === selectedRequest.id ? 'Liberando...' : 'Liberar' }}
+                  </button>
+
+                  <button
+                    type="button"
+                    *ngIf="canStart(selectedRequest)"
+                    [disabled]="actionLoadingId === selectedRequest.id"
+                    (click)="start(selectedRequest)"
+                    class="inline-flex items-center rounded-2xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {{ actionLoadingId === selectedRequest.id ? 'Iniciando...' : 'Iniciar servicio' }}
+                  </button>
+
+                  <button
+                    type="button"
+                    *ngIf="canComplete(selectedRequest)"
+                    [disabled]="actionLoadingId === selectedRequest.id"
+                    (click)="complete(selectedRequest)"
+                    class="inline-flex items-center rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {{ actionLoadingId === selectedRequest.id ? 'Finalizando...' : 'Finalizar servicio' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="border-b border-slate-200 px-5 py-5 sm:px-6">
+              <p class="mb-4 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Estado del servicio
+              </p>
+
+              <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <div
+                  *ngFor="let step of progressSteps; let i = index"
+                  class="rounded-2xl border p-4 text-center transition"
+                  [ngClass]="
+                    isProgressDone(selectedRequest, i)
+                      ? 'border-slate-900 bg-slate-900 text-white'
+                      : 'border-slate-200 bg-slate-50 text-slate-500'
+                  "
+                >
+                  <div class="mx-auto flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold"
+                       [ngClass]="
+                         isProgressDone(selectedRequest, i)
+                           ? 'bg-white/15 text-white'
+                           : 'bg-white text-slate-600 ring-1 ring-slate-200'
+                       ">
+                    {{ i + 1 }}
+                  </div>
+
+                  <p class="mt-3 text-sm font-semibold">
+                    {{ step }}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="px-5 py-5 sm:px-6">
+              <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <div class="rounded-3xl bg-slate-50 p-4 ring-1 ring-slate-200">
+                  <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Presupuesto
+                  </p>
+                  <p class="mt-2 text-sm font-bold text-slate-900">
+                    {{ budgetLabel(selectedRequest) }}
+                  </p>
+                </div>
+
+                <div class="rounded-3xl bg-slate-50 p-4 ring-1 ring-slate-200">
+                  <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Urgencia
+                  </p>
+                  <p class="mt-2">
+                    <span
+                      class="inline-flex rounded-full px-3 py-1 text-xs font-semibold ring-1 ring-inset"
+                      [ngClass]="urgencyClass(selectedRequest.urgency)"
+                    >
+                      {{ selectedRequest.urgency || 'No definida' }}
+                    </span>
+                  </p>
+                </div>
+
+                <div class="rounded-3xl bg-slate-50 p-4 ring-1 ring-slate-200">
+                  <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Ubicación
+                  </p>
+                  <p class="mt-2 text-sm font-bold text-slate-900">
+                    {{ locationLabel(selectedRequest) }}
+                  </p>
+                </div>
+
+                <div class="rounded-3xl bg-slate-50 p-4 ring-1 ring-slate-200">
+                  <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Fecha agenda
+                  </p>
+                  <p class="mt-2 text-sm font-bold text-slate-900">
+                    {{
+                      selectedRequest.schedule_date
+                        ? (selectedRequest.schedule_date | date:'mediumDate')
+                        : 'No definida'
+                    }}
+                  </p>
+                </div>
+              </div>
+
+              <div class="mt-5 grid gap-5 xl:grid-cols-2">
+                <div class="rounded-[26px] border border-slate-200 p-5">
+                  <h3 class="text-base font-bold text-slate-900">
+                    Detalles del servicio
+                  </h3>
+
+                  <div class="mt-4 space-y-4">
+                    <div>
+                      <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        Descripción
+                      </p>
+                      <div class="mt-2 rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-700 ring-1 ring-slate-200">
+                        {{ selectedRequest.description || 'Sin descripción' }}
+                      </div>
+                    </div>
+
+                    <div class="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                          Categoría
+                        </p>
+                        <p class="mt-2 text-sm font-semibold text-slate-900">
+                          {{ selectedRequest.category || 'No definida' }}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                          Estado actual
+                        </p>
+                        <p class="mt-2 text-sm font-semibold text-slate-900">
+                          {{ statusLabel(selectedRequest.status) }}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="rounded-[26px] border border-slate-200 p-5">
+                  <h3 class="text-base font-bold text-slate-900">
+                    Cliente y contacto
+                  </h3>
+
+                  <div class="mt-4 flex items-start gap-4">
+                    <div
+                      class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-sm font-bold text-white"
+                    >
+                      {{ customerInitials(selectedRequest.client_name) }}
+                    </div>
+
+                    <div class="min-w-0">
+                      <p class="text-sm font-bold text-slate-900">
+                        {{ selectedRequest.client_name || 'Cliente no disponible' }}
+                      </p>
+                      <p class="mt-1 text-sm text-slate-500">
+                        {{ selectedRequest.client_email || 'Correo no disponible' }}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div class="mt-5 grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        Teléfono
+                      </p>
+                      <p class="mt-2 text-sm font-semibold text-slate-900">
+                        {{ selectedRequest.contact_phone || 'No disponible' }}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        Preferencia de contacto
+                      </p>
+                      <p class="mt-2 text-sm font-semibold text-slate-900">
+                        {{ contactPreferenceLabel(selectedRequest.contact_pref) }}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="rounded-[26px] border border-slate-200 p-5 xl:col-span-2">
+                  <h3 class="text-base font-bold text-slate-900">
+                    Ubicación del servicio
+                  </h3>
+
+                  <div class="mt-4 grid gap-4 md:grid-cols-3">
+                    <div>
+                      <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        Ciudad
+                      </p>
+                      <p class="mt-2 text-sm font-semibold text-slate-900">
+                        {{ selectedRequest.city || 'No definida' }}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        Barrio
+                      </p>
+                      <p class="mt-2 text-sm font-semibold text-slate-900">
+                        {{ selectedRequest.neighborhood || 'No definido' }}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        Referencia
+                      </p>
+                      <p class="mt-2 text-sm font-semibold text-slate-900">
+                        {{ selectedRequest.address_ref || 'Sin referencia' }}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div class="mt-4">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      Dirección
+                    </p>
+                    <div class="mt-2 rounded-2xl bg-slate-50 p-4 text-sm text-slate-700 ring-1 ring-slate-200">
+                      {{ selectedRequest.address || 'No definida' }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <section
+            *ngIf="selectedRequest?.status === 'DONE'"
+            class="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_10px_40px_rgba(15,23,42,0.05)]"
+          >
+            <div class="border-b border-slate-200 px-5 py-5 sm:px-6">
+              <h3 class="text-lg font-bold text-slate-900">
+                Calificación del cliente
+              </h3>
+              <p class="mt-1 text-sm text-slate-500">
+                Cuando el servicio termina, ambas partes deben calificarse mutuamente.
+              </p>
+            </div>
+
+            <div class="px-5 py-5 sm:px-6">
+              <ng-container *ngIf="reviewSummary as rs">
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <div class="text-sm text-slate-700">
+                    Cliente → técnico:
+                    <strong>{{ rs.customer_review_done ? 'Ya enviada' : 'Pendiente' }}</strong>
+                  </div>
+
+                  <div class="mt-1 text-sm text-slate-700">
+                    Técnico → cliente:
+                    <strong>{{ rs.worker_review_done ? 'Ya enviada' : 'Pendiente' }}</strong>
+                  </div>
+                </div>
+
+                <div
+                  *ngIf="rs.can_review_as_worker"
+                  class="mt-4 rounded-2xl border border-indigo-200 bg-indigo-50/50 p-4"
+                >
+                  <div class="text-sm font-semibold text-slate-900">
+                    Califica al cliente {{ selectedRequest?.client_name || '' }}
+                  </div>
+
+                  <div class="mt-3 flex flex-wrap gap-2">
+                    <button
+                      *ngFor="let star of [1,2,3,4,5]"
+                      type="button"
+                      (click)="reviewDraft.rating = star"
+                      class="rounded-2xl border px-3 py-2 text-sm font-semibold"
+                      [ngClass]="reviewDraft.rating >= star
+                        ? 'border-amber-300 bg-amber-50 text-amber-800'
+                        : 'border-slate-200 bg-white text-slate-500'"
+                    >
+                      ★ {{ star }}
+                    </button>
+                  </div>
+
+                  <textarea
+                    class="mt-3 w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none"
+                    rows="4"
+                    [(ngModel)]="reviewDraft.comment"
+                    placeholder="Describe cómo fue la experiencia con el cliente..."
+                  ></textarea>
+
+                  <div *ngIf="reviewDraft.error" class="mt-2 text-sm text-rose-700">
+                    {{ reviewDraft.error }}
+                  </div>
+
+                  <button
+                    type="button"
+                    (click)="saveWorkerReview()"
+                    [disabled]="reviewDraft.saving"
+                    class="mt-3 rounded-2xl border border-indigo-200 bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 disabled:opacity-60"
+                  >
+                    {{ reviewDraft.saving ? 'Guardando…' : 'Guardar calificación' }}
+                  </button>
+                </div>
+
+                <div
+                  *ngIf="rs.customer_review"
+                  class="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4"
+                >
+                  <div class="text-sm font-semibold text-emerald-900">
+                    El cliente ya te calificó
+                  </div>
+                  <div class="mt-2 text-sm text-slate-800">
+                    Puntuación: <strong>{{ rs.customer_review.rating }}/5</strong>
+                  </div>
+                  <div *ngIf="rs.customer_review.comment" class="mt-1 text-sm text-slate-700">
+                    "{{ rs.customer_review.comment }}"
+                  </div>
+                </div>
+              </ng-container>
+
+              <div *ngIf="!reviewSummary" class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                Cargando información de calificación...
+              </div>
+            </div>
+          </section>
+
+          <div
+            class="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_10px_40px_rgba(15,23,42,0.05)]"
+          >
+            <div class="border-b border-slate-200 px-5 py-5 sm:px-6">
+              <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h3 class="text-lg font-bold text-slate-900">
+                    Chat con el cliente
+                  </h3>
+                  <p class="mt-1 text-sm text-slate-500">
+                    Comunicación rápida y simple desde esta misma vista.
+                  </p>
+                </div>
+
+                <span
+                  class="inline-flex w-fit rounded-full px-3 py-1 text-xs font-semibold ring-1 ring-inset"
+                  [ngClass]="
+                    chatEnabled
+                      ? 'bg-emerald-50 text-emerald-700 ring-emerald-200'
+                      : 'bg-slate-100 text-slate-600 ring-slate-200'
+                  "
+                >
+                  {{ chatEnabled ? 'Chat habilitado' : 'Acepta primero para habilitar chat' }}
+                </span>
+              </div>
+            </div>
+
+            <div class="px-5 py-5 sm:px-6">
+              <div
+                *ngIf="chatError"
+                class="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700"
+              >
+                {{ chatError }}
+              </div>
+
+              <div
+                *ngIf="!chatEnabled"
+                class="rounded-3xl border border-dashed border-slate-200 bg-slate-50 px-5 py-10 text-center"
+              >
+                <div
+                  class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-slate-200"
+                >
+                  <span class="text-xl">💬</span>
+                </div>
+
+                <h4 class="mt-4 text-base font-bold text-slate-900">
+                  Chat bloqueado
+                </h4>
+                <p class="mt-2 text-sm leading-6 text-slate-500">
+                  Acepta esta solicitud para hablar con el cliente.
+                </p>
+              </div>
+
+              <ng-container *ngIf="chatEnabled">
+                <div *ngIf="loadingMessages" class="space-y-3">
+                  <div
+                    *ngFor="let s of [1,2,3]"
+                    class="animate-pulse rounded-2xl bg-slate-100 p-4"
+                  >
+                    <div class="h-4 w-32 rounded bg-slate-200"></div>
+                    <div class="mt-3 h-4 w-full rounded bg-slate-200"></div>
+                    <div class="mt-2 h-4 w-2/3 rounded bg-slate-200"></div>
+                  </div>
+                </div>
+
+                <div
+                  *ngIf="!loadingMessages"
+                  class="thin-scroll max-h-[420px] space-y-3 overflow-y-auto rounded-3xl bg-slate-50 p-4 ring-1 ring-slate-200"
+                >
+                  <div
+                    *ngFor="let msg of messages; trackBy: trackByMessageId"
+                    class="max-w-[88%] rounded-3xl px-4 py-3 shadow-sm"
+                    [ngClass]="
+                      msg.is_mine
+                        ? 'ml-auto bg-slate-900 text-white'
+                        : 'bg-white text-slate-800 ring-1 ring-slate-200'
+                    "
+                  >
+                    <div
+                      class="mb-2 flex items-center justify-between gap-3 text-[11px]"
+                      [ngClass]="msg.is_mine ? 'text-slate-300' : 'text-slate-400'"
+                    >
+                      <strong class="truncate">
+                        {{ msg.sender_name || 'Usuario' }}
+                      </strong>
+                      <span class="shrink-0">
+                        {{ msg.created_at | date:'short' }}
+                      </span>
+                    </div>
+
+                    <div class="whitespace-pre-wrap break-words text-sm leading-6">
+                      {{ msg.body }}
+                    </div>
+                  </div>
+
+                  <div
+                    *ngIf="messages.length === 0"
+                    class="rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-8 text-center text-sm text-slate-500"
+                  >
+                    Aún no hay mensajes en esta solicitud.
+                  </div>
+                </div>
+
+                <div class="mt-4 rounded-[26px] border border-slate-200 bg-white p-4">
+                  <label class="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Escribe un mensaje
+                  </label>
+
+                  <textarea
+                    [(ngModel)]="messageText"
+                    rows="4"
+                    (keydown)="onMessageKeydown($event)"
+                    placeholder="Ejemplo: Hola, voy en camino. ¿Me confirmas la dirección exacta?"
+                    class="w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:bg-white focus:ring-4 focus:ring-slate-200"
+                  ></textarea>
+
+                  <div class="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <p class="text-xs text-slate-400">
+                      Consejo: usa <strong>Ctrl + Enter</strong> para enviar más rápido.
+                    </p>
+
+                    <button
+                      type="button"
+                      [disabled]="sendingMessage || !messageText.trim()"
+                      (click)="sendMessage()"
+                      class="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {{ sendingMessage ? 'Enviando...' : 'Enviar mensaje' }}
+                    </button>
+                  </div>
+                </div>
+              </ng-container>
+            </div>
+          </div>
+        </ng-container>
+
+        <ng-template #noSelection>
+          <div
+            class="rounded-[28px] border border-slate-200 bg-white px-6 py-16 text-center shadow-[0_10px_40px_rgba(15,23,42,0.05)]"
+          >
+            <div
+              class="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-slate-100 text-2xl"
+            >
+              🚗
+            </div>
+
+            <h3 class="mt-5 text-xl font-bold text-slate-900">
+              Selecciona una solicitud
+            </h3>
+
+            <p class="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
+              Elige una solicitud del panel izquierdo para ver los detalles y
+              realizar acciones rápidas.
+            </p>
+          </div>
+        </ng-template>
+      </section>
+    </div>
+  </div>
+</section>

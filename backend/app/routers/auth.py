@@ -10,15 +10,18 @@ from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from jwt import PyJWKClient
 from jwt.exceptions import InvalidTokenError
-from pydantic import BaseModel
-from sqlalchemy import or_
-from sqlalchemy.orm import Session
+from pydantic import BaseModel, ConfigDict
 
 from ..core.config import settings
-from ..core.database import get_db
 from ..core.deps import get_current_user
 from ..core.security import create_access_token, hash_password, verify_password
-from ..models import User
+from ..repositories.users_repo import (
+    create_local_user,
+    get_user_by_azure_oid,
+    get_user_by_email,
+    upsert_azure_user,
+    upsert_google_user,
+)
 from ..schemas.auth import AuthResponse, LoginRequest, RegisterRequest
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -33,6 +36,8 @@ class AzureExchangeRequest(BaseModel):
 
 
 class MeResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     first_name: str
     last_name: str
@@ -42,9 +47,6 @@ class MeResponse(BaseModel):
     created_at: Optional[datetime] = None
     auth_provider: Optional[str] = None
     azure_oid: Optional[str] = None
-
-    class Config:
-        from_attributes = True
 
 
 # =========================================================
@@ -80,7 +82,7 @@ def _split_name(
     return parts[0], " ".join(parts[1:])
 
 
-def _resolve_siph_role(roles: List[str], existing_user: Optional[User] = None) -> str:
+def _resolve_siph_role(roles: List[str], existing_user: Optional[dict] = None) -> str:
     normalized = {str(r).strip().upper() for r in (roles or []) if str(r).strip()}
 
     if "ADMIN" in normalized:
@@ -90,16 +92,16 @@ def _resolve_siph_role(roles: List[str], existing_user: Optional[User] = None) -
     if "USER" in normalized:
         return "USER"
 
-    if existing_user and existing_user.role:
-        return str(existing_user.role).strip().upper()
+    if existing_user and existing_user.get("role"):
+        return str(existing_user["role"]).strip().upper()
 
     return "USER"
 
 
 def _verify_azure_access_token(access_token: str) -> Dict[str, Any]:
-    tenant_id = _env("AZURE_TENANT_ID")
-    api_client_id = _env("AZURE_API_CLIENT_ID")
-    spa_client_id = _env("AZURE_SPA_CLIENT_ID")
+    tenant_id = _env("AZURE_TENANT_ID") or (settings.azure_tenant_id or "").strip()
+    api_client_id = _env("AZURE_API_CLIENT_ID") or (settings.azure_api_client_id or "").strip()
+    spa_client_id = _env("AZURE_SPA_CLIENT_ID") or (settings.azure_spa_client_id or "").strip()
 
     if not tenant_id or not api_client_id:
         raise HTTPException(
@@ -179,36 +181,32 @@ def _verify_azure_access_token(access_token: str) -> Dict[str, Any]:
 # AUTH LOCAL
 # =========================================================
 @router.post("/register", response_model=AuthResponse)
-def register(payload: RegisterRequest, db: Session = Depends(get_db)) -> AuthResponse:
+def register(payload: RegisterRequest) -> AuthResponse:
     email = _normalize_email(payload.email)
 
-    existing = db.query(User).filter(User.email == email).first()
+    existing = get_user_by_email(email)
     if existing:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="El correo ya está registrado.",
         )
 
-    user = User(
+    user = create_local_user(
         first_name=payload.first_name.strip(),
         last_name=payload.last_name.strip(),
         email=email,
         password_hash=hash_password(payload.password),
-        auth_provider="LOCAL",
         role="USER",
     )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
 
-    token = create_access_token(user.email)
+    token = create_access_token(user["email"])
     return AuthResponse(access_token=token)
 
 
 @router.post("/login", response_model=AuthResponse)
-def login(payload: LoginRequest, db: Session = Depends(get_db)) -> AuthResponse:
+def login(payload: LoginRequest) -> AuthResponse:
     email = _normalize_email(payload.email)
-    user = db.query(User).filter(User.email == email).first()
+    user = get_user_by_email(email)
 
     if not user:
         raise HTTPException(
@@ -216,31 +214,33 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)) -> AuthResponse:
             detail="Credenciales inválidas.",
         )
 
-    if user.auth_provider == "AZURE":
+    auth_provider = str(user.get("auth_provider") or "LOCAL").upper()
+
+    if auth_provider == "AZURE":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Esta cuenta debe iniciar sesión con Microsoft.",
         )
 
-    if user.auth_provider == "GOOGLE":
+    if auth_provider == "GOOGLE":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Esta cuenta debe iniciar sesión con Google.",
         )
 
-    if not verify_password(payload.password, user.password_hash):
+    if not verify_password(payload.password, user.get("password_hash") or ""):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Credenciales inválidas.",
         )
 
-    if not user.is_active:
+    if not bool(user.get("is_active", True)):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Usuario inactivo.",
         )
 
-    token = create_access_token(user.email)
+    token = create_access_token(user["email"])
     return AuthResponse(access_token=token)
 
 
@@ -248,7 +248,7 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)) -> AuthResponse:
 # AUTH GOOGLE
 # =========================================================
 @router.post("/google", response_model=AuthResponse)
-def login_with_google(payload: GoogleLoginRequest, db: Session = Depends(get_db)) -> AuthResponse:
+def login_with_google(payload: GoogleLoginRequest) -> AuthResponse:
     google_client_id = (settings.google_client_id or "").strip()
     if not google_client_id:
         raise HTTPException(
@@ -279,34 +279,20 @@ def login_with_google(payload: GoogleLoginRequest, db: Session = Depends(get_db)
     last_name = (info.get("family_name") or "").strip()
     google_sub = str(info.get("sub") or "").strip()
 
-    user = db.query(User).filter(User.email == email).first()
+    user = upsert_google_user(
+        email=email,
+        first_name=first_name or "Usuario",
+        last_name=last_name or "Google",
+        password_hash=hash_password(f"GOOGLE::{google_sub}"),
+    )
 
-    if not user:
-        user = User(
-            first_name=first_name or "Usuario",
-            last_name=last_name or "Google",
-            email=email,
-            password_hash=hash_password(f"GOOGLE::{google_sub}"),
-            auth_provider="GOOGLE",
-            role="USER",
-        )
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-    else:
-        user.first_name = first_name or user.first_name
-        user.last_name = last_name or user.last_name
-        user.auth_provider = "GOOGLE"
-        db.commit()
-        db.refresh(user)
-
-    if not user.is_active:
+    if not bool(user.get("is_active", True)):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Usuario inactivo.",
         )
 
-    token = create_access_token(user.email)
+    token = create_access_token(user["email"])
     return AuthResponse(access_token=token)
 
 
@@ -314,13 +300,11 @@ def login_with_google(payload: GoogleLoginRequest, db: Session = Depends(get_db)
 # AUTH AZURE / MICROSOFT ENTRA ID
 # =========================================================
 @router.post("/azure/exchange", response_model=AuthResponse)
-def exchange_azure_token(
-    payload: AzureExchangeRequest,
-    db: Session = Depends(get_db),
-) -> AuthResponse:
+def exchange_azure_token(payload: AzureExchangeRequest) -> AuthResponse:
     claims = _verify_azure_access_token(payload.access_token)
 
     oid = str(claims.get("oid") or "").strip()
+    tid = str(claims.get("tid") or "").strip()
     email = _normalize_email(
         claims.get("preferred_username")
         or claims.get("upn")
@@ -339,11 +323,16 @@ def exchange_azure_token(
             detail="El token de Azure no trae email utilizable.",
         )
 
-    user = (
-        db.query(User)
-        .filter(or_(User.azure_oid == oid, User.email == email))
-        .first()
-    )
+    user_by_oid = get_user_by_azure_oid(oid)
+    user_by_email = get_user_by_email(email)
+
+    if user_by_oid and user_by_email and user_by_oid["email"] != user_by_email["email"]:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Conflicto entre usuario existente por email y por Azure OID.",
+        )
+
+    existing_user = user_by_oid or user_by_email
 
     first_name, last_name = _split_name(
         full_name=str(claims.get("name") or "").strip(),
@@ -355,42 +344,42 @@ def exchange_azure_token(
     if not isinstance(roles, list):
         roles = [str(roles)]
 
-    siph_role = _resolve_siph_role(roles, user)
+    siph_role = _resolve_siph_role(roles, existing_user)
 
-    if not user:
-        user = User(
-            first_name=first_name,
-            last_name=last_name,
-            email=email,
-            password_hash=hash_password(f"AZURE::{oid}"),
-            azure_oid=oid,
-            auth_provider="AZURE",
-            role=siph_role,
-            is_active=True,
-        )
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-    else:
-        user.azure_oid = oid
-        user.auth_provider = "AZURE"
-        user.first_name = first_name or user.first_name
-        user.last_name = last_name or user.last_name
-        user.email = email or user.email
-        user.role = siph_role
-        db.commit()
-        db.refresh(user)
+    effective_email = email
+    if user_by_oid and user_by_oid.get("email") and user_by_oid["email"] != email:
+        effective_email = user_by_oid["email"]
 
-    if not user.is_active:
+    user = upsert_azure_user(
+        email=effective_email,
+        first_name=first_name,
+        last_name=last_name,
+        azure_oid=oid,
+        azure_tid=tid,
+        password_hash=hash_password(f"AZURE::{oid}"),
+        role=siph_role,
+    )
+
+    if not bool(user.get("is_active", True)):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Usuario inactivo.",
         )
 
-    token = create_access_token(user.email)
+    token = create_access_token(user["email"])
     return AuthResponse(access_token=token)
 
 
 @router.get("/me", response_model=MeResponse)
-def me(current_user: User = Depends(get_current_user)) -> MeResponse:
-    return current_user
+def me(current_user: Any = Depends(get_current_user)) -> MeResponse:
+    return MeResponse(
+        id=getattr(current_user, "id"),
+        first_name=getattr(current_user, "first_name"),
+        last_name=getattr(current_user, "last_name"),
+        email=getattr(current_user, "email"),
+        role=getattr(current_user, "role"),
+        is_active=getattr(current_user, "is_active"),
+        created_at=getattr(current_user, "created_at", None),
+        auth_provider=getattr(current_user, "auth_provider", None),
+        azure_oid=getattr(current_user, "azure_oid", None),
+    )

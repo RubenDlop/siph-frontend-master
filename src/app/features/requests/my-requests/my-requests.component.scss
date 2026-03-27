@@ -2,13 +2,17 @@
   display: block;
 }
 
-/* Blindaje: si tienes CSS global agresivo con !important */
+/* =========================================================
+   BLINDAJE BASE
+   ========================================================= */
 .mr-page {
   color: #0f172a !important;
+  isolation: isolate;
 }
 
-/* ✅ NO uses un "override universal" porque mata los colores (amber/sky/etc).
-   En su lugar, re-declaramos SOLO los tokens que usamos en el template. */
+/* =========================================================
+   TOKENS DE TEXTO
+   ========================================================= */
 
 /* Slate */
 .mr-page .text-slate-900 { color: #0f172a !important; }
@@ -31,31 +35,172 @@
 .mr-page .text-rose-900 { color: #881337 !important; }
 .mr-page .text-rose-800 { color: #9f1239 !important; }
 
-/* ✅ FALTABAN (para status chips / urgency) */
+/* Amber / Sky */
+.mr-page .text-amber-900 { color: #78350f !important; }
 .mr-page .text-amber-800 { color: #92400e !important; }
+.mr-page .text-sky-900 { color: #0c4a6e !important; }
 .mr-page .text-sky-800 { color: #075985 !important; }
 
-/* Respeta blancos */
+/* White */
 .mr-page .text-white { color: #ffffff !important; }
 
-/* Scrollbar premium (solo estética) */
-.mr-scroll::-webkit-scrollbar {
+/* =========================================================
+   TOKENS DE FONDO
+   ========================================================= */
+.mr-page .bg-white { background-color: #ffffff !important; }
+.mr-page .bg-slate-50 { background-color: #f8fafc !important; }
+.mr-page .bg-indigo-50 { background-color: #eef2ff !important; }
+.mr-page .bg-emerald-50 { background-color: #ecfdf5 !important; }
+.mr-page .bg-rose-50 { background-color: #fff1f2 !important; }
+.mr-page .bg-amber-50 { background-color: #fffbeb !important; }
+.mr-page .bg-sky-50 { background-color: #f0f9ff !important; }
+
+.mr-page .bg-white\/70 { background-color: rgba(255, 255, 255, 0.7) !important; }
+.mr-page .bg-white\/75 { background-color: rgba(255, 255, 255, 0.75) !important; }
+.mr-page .bg-white\/80 { background-color: rgba(255, 255, 255, 0.8) !important; }
+.mr-page .bg-white\/90 { background-color: rgba(255, 255, 255, 0.9) !important; }
+
+.mr-page .bg-rose-50\/90 { background-color: rgba(255, 241, 242, 0.9) !important; }
+.mr-page .bg-slate-50\/40 { background-color: rgba(248, 250, 252, 0.4) !important; }
+.mr-page .bg-slate-50\/60 { background-color: rgba(248, 250, 252, 0.6) !important; }
+
+/* =========================================================
+   TOKENS DE BORDE
+   ========================================================= */
+.mr-page .border-slate-200 { border-color: #e2e8f0 !important; }
+.mr-page .border-slate-100 { border-color: #f1f5f9 !important; }
+
+.mr-page .border-indigo-200 { border-color: #c7d2fe !important; }
+.mr-page .border-emerald-200 { border-color: #a7f3d0 !important; }
+.mr-page .border-rose-200 { border-color: #fecdd3 !important; }
+.mr-page .border-amber-200 { border-color: #fde68a !important; }
+.mr-page .border-sky-200 { border-color: #bae6fd !important; }
+
+.mr-page .border-indigo-300 { border-color: #a5b4fc !important; }
+.mr-page .border-emerald-300 { border-color: #6ee7b7 !important; }
+.mr-page .border-rose-300 { border-color: #fda4af !important; }
+.mr-page .border-amber-300 { border-color: #fcd34d !important; }
+
+/* =========================================================
+   SOMBRAS / DETALLES SUAVES
+   ========================================================= */
+.mr-page .shadow-sm {
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06) !important;
+}
+
+.mr-page .backdrop-blur {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* =========================================================
+   UTILIDADES DE COMPATIBILIDAD
+   ========================================================= */
+
+/* fallback para line-clamp-2 si no lo está resolviendo el build */
+.mr-page .line-clamp-2 {
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+}
+
+/* Sticky thead más suave visualmente */
+.mr-page thead.sticky {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Botones y celdas con mejor render */
+.mr-page button,
+.mr-page select,
+.mr-page input {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mr-page table {
+  border-spacing: 0;
+}
+
+.mr-page th,
+.mr-page td {
+  vertical-align: top;
+}
+
+/* =========================================================
+   SCROLLBARS PREMIUM
+   ========================================================= */
+.mr-scroll,
+.thin-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.mr-scroll::-webkit-scrollbar,
+.thin-scroll::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
-.mr-scroll::-webkit-scrollbar-thumb {
+
+.mr-scroll::-webkit-scrollbar-track,
+.thin-scroll::-webkit-scrollbar-track {
+  background: rgba(2, 6, 23, 0.03);
+  border-radius: 999px;
+}
+
+.mr-scroll::-webkit-scrollbar-thumb,
+.thin-scroll::-webkit-scrollbar-thumb {
   background: rgba(15, 23, 42, 0.15);
   border-radius: 999px;
   border: 2px solid rgba(255, 255, 255, 0.7);
 }
-.mr-scroll::-webkit-scrollbar-track {
-  background: rgba(2, 6, 23, 0.03);
+
+.mr-scroll::-webkit-scrollbar-thumb:hover,
+.thin-scroll::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
-/* Reduce motion friendly */
+/* =========================================================
+   MICRO-ANIMACIONES SUTILES
+   ========================================================= */
+.mr-page .transition {
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    color 180ms ease,
+    transform 180ms ease;
+}
+
+.mr-page .active\:scale-\[0\.99\]:active {
+  transform: scale(0.99);
+}
+
+/* =========================================================
+   RESPONSIVE HELPERS
+   ========================================================= */
+@media (max-width: 1023.98px) {
+  .mr-page .mr-mobile-stack {
+    display: grid;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .mr-page .mr-scroll::-webkit-scrollbar,
+  .mr-page .thin-scroll::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+}
+
+/* =========================================================
+   REDUCE MOTION
+   ========================================================= */
 @media (prefers-reduced-motion: reduce) {
   .mr-page * {
     animation: none !important;
     transition: none !important;
+    scroll-behavior: auto !important;
   }
 }

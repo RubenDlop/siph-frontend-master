@@ -1,28 +1,33 @@
+from __future__ import annotations
+
+from types import SimpleNamespace
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
-from sqlalchemy.orm import Session
 
 from .config import settings
-from .database import get_db
-from ..models.user import User
-
+from ..repositories.users_repo import get_user_by_email
 
 security = HTTPBearer()
 
 
+def _to_obj(data: dict) -> SimpleNamespace:
+    return SimpleNamespace(**data)
+
+
 def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Session = Depends(get_db),
-) -> User:
+):
     token = credentials.credentials
+
     try:
         payload = jwt.decode(
             token,
             settings.jwt_secret_key,
             algorithms=[settings.jwt_algorithm],
         )
-        email: str | None = payload.get("sub")
+        email = payload.get("sub")
         if not email:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -34,26 +39,27 @@ def get_current_user(
             detail="Token inválido.",
         ) from exc
 
-    user = db.query(User).filter(User.email == email).first()
+    user = get_user_by_email(str(email).strip().lower())
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Usuario no encontrado.",
         )
-    if not user.is_active:
+
+    if not bool(user.get("is_active", True)):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Usuario inactivo.",
         )
-    return user
+
+    return _to_obj(user)
 
 
-# ✅ Helper para proteger endpoints por rol
 def require_roles(*roles: str):
     allowed = {r.upper() for r in roles}
 
-    def checker(current_user: User = Depends(get_current_user)) -> User:
-        role = (current_user.role or "USER").upper()
+    def checker(current_user=Depends(get_current_user)):
+        role = str(getattr(current_user, "role", "USER") or "USER").upper()
         if role not in allowed:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
